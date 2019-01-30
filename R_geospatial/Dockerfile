@@ -67,7 +67,7 @@ RUN install2.r --error --deps TRUE \
      RSQLite \
      simstudy \
      spacetime \
-     spatstat \
+     ## spatstat \
      spdep \
      sqldf \
      stars \
