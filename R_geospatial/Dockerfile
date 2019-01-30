@@ -1,8 +1,9 @@
-FROM r-base
+FROM rocker/r-base
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 RUN apt-get update -qq -y \
    && apt-get install -t unstable -y --no-install-recommends \
+     bwidget \
      lbzip2 \
      libcairo2-dev \
      libfftw3-dev \
