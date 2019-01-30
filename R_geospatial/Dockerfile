@@ -1,5 +1,5 @@
 FROM r-base
-MAINTAINER "Vijay Lulla" vijaylulla@gmail.com
+LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 RUN apt-get update -qq -y \
    && apt-get install -t unstable -y --no-install-recommends \
