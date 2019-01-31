@@ -22,6 +22,7 @@ RUN apt-get update -qq -y \
      libprotobuf-dev \
      libnetcdf-dev \
      libsqlite3-dev \
+     libssh2-1-dev \
      libssl-dev \
      libudunits2-dev \
      libv8-dev \
@@ -67,11 +68,12 @@ RUN install2.r --error --deps TRUE --skipinstalled\
      sqldf \
      stringi \
      stringr \
-     tau \
-     tm \
+     ## tau \
+     ## tm \
      tmap \
-     xgboost \
-     ## from biconductor
-   && R -e "BiocManager::install('rhdf5')"
+     xgboost
+   ##   xgboost \
+   ##   ## from biconductor
+   ## && R -e "BiocManager::install('rhdf5')"
 
 CMD ["bash"]
