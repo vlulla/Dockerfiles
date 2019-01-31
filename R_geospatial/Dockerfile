@@ -1,6 +1,7 @@
 FROM rocker/r-base
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
+ENV DISPLAY :0
 RUN apt-get update -qq -y \
    && apt-get install -t unstable -y --no-install-recommends \
      bwidget \
@@ -30,12 +31,9 @@ RUN apt-get update -qq -y \
      unixodbc-dev \
    && ln -s /usr/lib/x86_64-linux-gnu/libgeos-3.7.1.so /usr/lib/x86_64-linux-gnu/libgeos.so
 
-RUN install2.r --error --deps TRUE \
-     RColorBrewer \
-     RandomFields \
+RUN install2.r --error --deps TRUE --skipinstalled\
      RNetCDF \
      caret \
-     censusapi \
      classInt \
      e1071 \
      data.table \
@@ -44,7 +42,6 @@ RUN install2.r --error --deps TRUE \
      glmnet \
      geonames \
      gstat \
-     hdf5r \
      igraph \
      jsonlite \
      leaflet \
@@ -59,25 +56,19 @@ RUN install2.r --error --deps TRUE \
      sp \
      raster \
      rasterVis \
-     rgbif \
      rgdal \
      rgeos \
-     rlas \
      rnaturalearth \
      RSQLite \
      simstudy \
-     spacetime \
      ## spatstat \
      spdep \
      sqldf \
-     stars \
      stringi \
      stringr \
      tau \
      tm \
      tmap \
-     geoR \
-     geosphere \
      xgboost \
      ## from biconductor
    && R -e "BiocManager::install('rhdf5')"
