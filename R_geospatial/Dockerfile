@@ -33,7 +33,12 @@ RUN apt-get update -qq -y \
      unixodbc-dev \
    && ln -s /usr/lib/x86_64-linux-gnu/libgeos-3.7.1.so /usr/lib/x86_64-linux-gnu/libgeos.so
 
-RUN install2.r --error --deps TRUE --skipinstalled\
+## sf, sp, and RSQLite are at the top because they have lots of dependencies!
+## simplifies other package installations...especially with --skipinstalled
+RUN install2.r --error --deps TRUE --skipinstalled \
+     sf \
+     sp \
+     RSQLite \
      RNetCDF \
      caret \
      classInt \
@@ -54,14 +59,12 @@ RUN install2.r --error --deps TRUE --skipinstalled\
      nnet \
      ncdf4 \
      proj4 \
-     sf \
-     sp \
      raster \
      rasterVis \
+     rbenchmark \
      rgdal \
      rgeos \
      rnaturalearth \
-     RSQLite \
      simstudy \
      ## spatstat \
      spdep \
