@@ -1,10 +1,11 @@
 FROM rocker/r-base
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
-ENV DISPLAY :0
+## ENV DISPLAY :0
 RUN apt-get update -qq -y \
    && apt-get install -t unstable -y --no-install-recommends \
      bwidget \
+     default-jdk \
      lbzip2 \
      libcairo2-dev \
      libfftw3-dev \
