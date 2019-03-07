@@ -7,7 +7,6 @@ all: Dockerfile
 
 clean:
 	@echo "Do cleaning here"
-	docker image rm lilypond
-	docker image rm ubuntu
+	docker rmi lilypond ubuntu
 
 

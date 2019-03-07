@@ -7,6 +7,6 @@ all: Dockerfile
 
 clean:
 	@echo "Do cleaning here"
-	docker image rm r_geospatial
+	docker rmi r_geospatial rocker/r-base
 
 
