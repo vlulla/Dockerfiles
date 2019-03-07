@@ -1,6 +1,8 @@
 FROM rocker/r-base
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
+## docker build -t r_geospatial .
+
 ## ENV DISPLAY :0
 RUN apt-get update -qq -y \
    && apt-get install -t unstable -y --no-install-recommends \
