@@ -1,7 +1,9 @@
 FROM rocker/r-base
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
-## docker build -t r_geospatial .
+## Buid with command: docker build -t r_geospatial .
+##
+## Run with command: docker run --rm -it --name geospatialR r_geospatial
 
 ## ENV DISPLAY :0
 RUN apt-get update -qq -y \
@@ -80,5 +82,10 @@ RUN install2.r --error --deps TRUE --skipinstalled \
    ##   xgboost \
    ##   ## from biconductor
    ## && R -e "BiocManager::install('rhdf5')"
+
+## Add r user
+RUN groupadd -r r && useradd -r -g r -G sudo,r && mkdir -p /home/r && chown -R r:r /home/r
+
+USER r
 
 CMD ["bash"]
