@@ -84,7 +84,7 @@ RUN install2.r --error --deps TRUE --skipinstalled \
    ## && R -e "BiocManager::install('rhdf5')"
 
 ## Add r user
-RUN groupadd -r r && useradd -r -g r -G sudo,r && mkdir -p /home/r && chown -R r:r /home/r
+RUN groupadd -r r && useradd -r -m -g r -G sudo,r r && chown -R r:r /home/r
 
 USER r
 
