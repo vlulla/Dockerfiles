@@ -83,9 +83,11 @@ RUN install2.r --error --deps TRUE --skipinstalled \
    ##   ## from biconductor
    ## && R -e "BiocManager::install('rhdf5')"
 
+ENV HOME /home/r
 ## Add r user
-RUN groupadd -r r && useradd -r -m -g r -G sudo,r r && chown -R r:r /home/r
+RUN groupadd -r r && useradd -r -m -g r -G sudo,r r && chown -R r:r ${HOME}
 
+WORKDIR ${HOME}
 USER r
 
 CMD ["bash"]
