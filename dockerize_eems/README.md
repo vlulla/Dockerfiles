@@ -12,3 +12,11 @@ The above will create a lot of text output about what it is doing.  At the end i
 ```
 docker run -ti --rm eems
 ```
+which will result in a terminal shell containing the `eems` source directory.  In this terminal navigate to the folder `runeems_sats` and run one of the trial programs listed in there.  Following commands list these steps:
+
+```
+cd eems/runeems_sats/src
+./runeems_sats --params params-chain1.ini --seed 123
+```
+
+
