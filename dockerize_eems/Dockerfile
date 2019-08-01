@@ -29,4 +29,6 @@ RUN git clone https://github.com/dipetkov/eems \
 RUN groupadd -r u && useradd -r -g u -G sudo,u u && chown -R u:u ${HOME}
 USER u
 
+ENV PATH="${PATH}:${HOME}/eems/runeems_sats/src"
+
 CMD ["bash"]
