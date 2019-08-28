@@ -1,17 +1,18 @@
 FROM alpine
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
-## Buid with command: docker build -f Dockerfile.alpine -t eems_alpine .
+## Buid with command: docker build -f Dockerfile -t eems .
 ##
 ## Run with command: docker run --rm -it --name eems_container eems
 
-RUN apk update && apk add \
+RUN apk update && apk add --no-cache --virtual .build-deps \
      wget \
      git \
      make \
      g++ \
      eigen-dev \
      boost-dev
+RUN apk del .build-deps
 
 ENV HOME /home/u
 WORKDIR ${HOME}
