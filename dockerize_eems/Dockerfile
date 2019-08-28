@@ -1,20 +1,17 @@
-FROM ubuntu:18.04
+FROM alpine
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
-## Buid with command: docker build -t eems .
+## Buid with command: docker build -f Dockerfile.alpine -t eems_alpine .
 ##
 ## Run with command: docker run --rm -it --name eems_container eems
 
-RUN apt-get update -qq -y \
-   && apt-get install -y --no-install-recommends \
-     software-properties-common \
+RUN apk update && apk add \
      wget \
      git \
      make \
      g++ \
-     libeigen3-dev \
-     libboost-all-dev \
-   && rm -rf /var/lib/apt/lists/*
+     eigen-dev \
+     boost-dev
 
 ENV HOME /home/u
 WORKDIR ${HOME}
@@ -26,9 +23,9 @@ RUN git clone https://github.com/dipetkov/eems \
 
 ## Add user
 ## RUN groupadd -r u && useradd -r -m -g u -G sudo,u u && chown -R u:u ${HOME}
-RUN groupadd -r u && useradd -r -g u -G sudo,u u && chown -R u:u ${HOME}
+RUN addgroup -S u && adduser -G u -D u && chown -R u:u ${HOME}
 USER u
 
 ENV PATH="${PATH}:${HOME}/eems/runeems_sats/src"
 
-CMD ["bash"]
+CMD ["ash"]
