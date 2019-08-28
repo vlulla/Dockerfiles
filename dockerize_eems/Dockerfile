@@ -12,7 +12,6 @@ RUN apk update && apk add --no-cache --virtual .build-deps \
      g++ \
      eigen-dev \
      boost-dev
-RUN apk del .build-deps
 
 ENV HOME /home/u
 WORKDIR ${HOME}
@@ -21,6 +20,8 @@ RUN git clone https://github.com/dipetkov/eems \
   && cd eems/runeems_sats/src \
   && sed -i.orig -e '/^EIGEN_INC/s@=.\+$@= /usr/include/eigen3@' -e '/^BOOST_LIB/s@=.\+$@= /usr/lib@' -e '/^BOOST_INC/s@=.\+$@= /usr/include@' Makefile \
   && make linux
+
+RUN apk del .build-deps
 
 ## Add user
 ## RUN groupadd -r u && useradd -r -m -g u -G sudo,u u && chown -R u:u ${HOME}
