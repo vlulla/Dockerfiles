@@ -24,6 +24,8 @@ RUN git clone https://github.com/biomodhub/biomod2 \
   && cd biomod2 \
   && R CMD INSTALL .
 
+COPY ./maxent.jar /usr/local/lib/R/site-library/dismo/java/maxent.jar
+
 ENV USER ${USER:-vlulla}
 
 RUN useradd -ms /bin/bash ${USER}
