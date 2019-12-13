@@ -1,4 +1,4 @@
-FROM rocker/geospatial:3.6.1
+FROM rocker/geospatial:3.6.1 AS builder
 LABEL maintainer="Vijay Lulla vijaylulla@gmail.com"
 
 RUN install2.r --error devtools \
@@ -25,6 +25,12 @@ RUN git clone https://github.com/biomodhub/biomod2 \
   && R CMD INSTALL .
 
 COPY ./maxent.jar /usr/local/lib/R/site-library/dismo/java/maxent.jar
+
+FROM rocker/r-ver:3.6.1 AS runner
+
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+COPY --from=builder /usr/local/lib/ /usr/local/lib/
+COPY --from=builder /usr/local/include/ /usr/local/include/
 
 ENV USER ${USER:-vlulla}
 
