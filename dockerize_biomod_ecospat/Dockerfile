@@ -27,6 +27,33 @@ RUN git clone https://github.com/biomodhub/biomod2 \
 COPY ./maxent.jar /usr/local/lib/R/site-library/dismo/java/maxent.jar
 
 FROM rocker/r-ver:3.6.1 AS runner
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    default-jdk \
+    lbzip2 \
+    libfftw3-dev \
+    libgdal-dev \
+    libgeos-dev \
+    libgsl0-dev \
+    libgl1-mesa-dev \
+    libglu1-mesa-dev \
+    libhdf4-alt-dev \
+    libhdf5-dev \
+    libjq-dev \
+    liblwgeom-dev \
+    libpq-dev \
+    libproj-dev \
+    libprotobuf-dev \
+    libnetcdf-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libudunits2-dev \
+    netcdf-bin \
+    postgis \
+    protobuf-compiler \
+    sqlite3 \
+    tk-dev \
+    unixodbc-dev
 
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 COPY --from=builder /usr/local/lib/ /usr/local/lib/
