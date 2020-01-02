@@ -1,0 +1,22 @@
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[english]{babel} %% needed by biblatex-apa!
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage[backend=biber, style=apa, sorting=ynt]{biblatex}
+\usepackage{csquotes} %% needed by biblatex-apa
+\addbibresource{bibfile.bib} %% .bib extension is needed!
+
+\title{Title goes here}
+\author{Vijay~Lulla\\
+  Department of Geography\\
+  IUPUI}
+\date{\today}
+
+\begin{document}
+
+\nocite{*}
+\printbibliography % for biblatex!!
+\end{document}
+
