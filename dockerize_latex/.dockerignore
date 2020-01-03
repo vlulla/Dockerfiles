@@ -1,2 +1,5 @@
 *.swp
 example
+*.bbl
+*.run.xml
+*.pdf

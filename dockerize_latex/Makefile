@@ -10,8 +10,10 @@ SHELL := bash
 .PHONY: all clean message
 .DEFAULT_GOAL: all
 
+## all: Dockerfile
+## 	sed -e "s/{{USERNAME}}/$$(id -un)/g" -e "s/{{GROUPNAME}}/$$(id -gn)/g" -e "s/{{GID}}/$$(id -g)/g" -e "s/{{UID}}/$$(id -u)/g" $< | sudo docker build -t dockerize_latex -f - .
 all: Dockerfile
-	sed -e "s/{{USERNAME}}/$$(id -un)/g" -e "s/{{GROUPNAME}}/$$(id -gn)/g" -e "s/{{GID}}/$$(id -g)/g" -e "s/{{UID}}/$$(id -u)/g" $< | sudo docker build -t dockerize_latex -f - .
+	docker build --build-arg UID=$$(id -u) --build-arg GID=$$(id -g) --build-arg UNAME=$$(id -un) -t dockerize_latex -f $< .
 clean:
 	@echo "Do cleaning here"
 
