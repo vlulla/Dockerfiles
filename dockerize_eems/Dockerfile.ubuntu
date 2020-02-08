@@ -3,7 +3,10 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-## Buid with command: docker build -t eems .
+ARG GROUP_ID
+ARG USER_ID
+
+## Buid with command: docker build --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) -t eems .
 ##
 ## Run with command: docker run --rm -it --name eems_container eems
 
@@ -28,7 +31,7 @@ RUN git clone https://github.com/dipetkov/eems \
 
 ## Add user
 ## RUN groupadd -r u && useradd -r -m -g u -G sudo,u u && chown -R u:u ${HOME}
-RUN groupadd -r u && useradd -r -g u -G sudo,u u && chown -R u:u ${HOME}
+RUN groupadd -r -g ${GROUP_ID} u && useradd -r -g u --uid ${USER_ID} -G sudo,u u && chown -R u:u ${HOME}
 USER u
 
 ENV PATH="${PATH}:${HOME}/eems/runeems_sats/src"

@@ -1,7 +1,10 @@
 FROM alpine
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
-## Buid with command: docker build -f Dockerfile -t eems .
+ARG GROUP_ID
+ARG USER_ID
+
+## Buid with command: docker build --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) -f Dockerfile -t eems .
 ##
 ## Run with command: docker run --rm -it --name eems_container eems
 
@@ -25,7 +28,7 @@ RUN apk del .build-deps
 
 ## Add user
 ## RUN groupadd -r u && useradd -r -m -g u -G sudo,u u && chown -R u:u ${HOME}
-RUN addgroup -S u && adduser -G u -D u && chown -R u:u ${HOME}
+RUN addgroup -S -g ${GROUP_ID} u && adduser -D -G u  u && chown -R u:u ${HOME}
 USER u
 
 ENV PATH="${PATH}:${HOME}/eems/runeems_sats/src"
