@@ -1,4 +1,6 @@
-FROM rocker/r-base
+## FROM rocker/r-base
+FROM r-base
+
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ## Buid with command: docker build -t r_geospatial .
@@ -21,7 +23,7 @@ RUN apt-get update -qq -y \
      libhdf4-alt-dev \
      libhdf5-dev \
      libjq-dev \
-     liblwgeom-dev \
+##      liblwgeom-dev \
      libproj-dev \
      libprotobuf-dev \
      libnetcdf-dev \

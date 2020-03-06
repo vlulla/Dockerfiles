@@ -15,5 +15,5 @@ SHELL := bash
 all: Dockerfile
 	docker build --build-arg UID=$$(id -u) --build-arg GID=$$(id -g) --build-arg UNAME=$$(id -un) -t dockerize_latex -f $< .
 clean:
-	@echo "Do cleaning here"
+	docker rmi dockerize_latex
 
