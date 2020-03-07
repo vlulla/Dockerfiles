@@ -28,7 +28,7 @@ RUN apk del .build-deps
 
 ## Add user
 ## RUN groupadd -r u && useradd -r -m -g u -G sudo,u u && chown -R u:u ${HOME}
-RUN addgroup -S -g ${GROUP_ID} u && adduser -D -G u  u && chown -R u:u ${HOME}
+RUN addgroup -S -g ${GROUP_ID:-1000} u && adduser -D -G u  u && chown -R u:u ${HOME}
 USER u
 
 ENV PATH="${PATH}:${HOME}/eems/runeems_sats/src"
