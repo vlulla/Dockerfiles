@@ -37,59 +37,33 @@ RUN apt-get update -qq -y \
      protobuf-compiler \
      tk-dev \
      unixodbc-dev \
+     zstd libzstd1 libzstd-dev \
+     libharfbuzz-dev libfribidi-dev \
    && ln -s /usr/lib/x86_64-linux-gnu/libgeos-3.7.1.so /usr/lib/x86_64-linux-gnu/libgeos.so
 
 ## sf, sp, and RSQLite are at the top because they have lots of dependencies!
 ## simplifies other package installations...especially with --skipinstalled
-RUN install2.r --error --deps TRUE --skipinstalled \
-     sf \
-     sp \
-     RSQLite \
-     RNetCDF \
-     caret \
-     classInt \
-     e1071 \
-     data.table \
-     deldir \
-     gbm \
-     glmnet \
-     geonames \
-     gstat \
-     igraph \
-     jsonlite \
-     leaflet \
-     lidR \
-     mapdata \
-     maptools \
-     mapview \
-     nnet \
-     ncdf4 \
-     proj4 \
-     raster \
-     rasterVis \
-     rbenchmark \
-     rgdal \
-     rgeos \
-     rnaturalearth \
-     simstudy \
-     ## spatstat \
-     spdep \
-     sqldf \
-     stringi \
-     stringr \
-     ## tau \
-     ## tm \
-     tmap \
-     xgboost
-   ##   xgboost \
-   ##   ## from biconductor
-   ## && R -e "BiocManager::install('rhdf5')"
 
-ENV HOME /home/r
+RUN install2.r --error --deps TRUE --skipinstalled sf sp RSQLite
+RUN install2.r --error --deps TRUE --skipinstalled jsonlite sqldf
+RUN install.r --error --deps TRUE --skipinstalled BiocManager
+RUN installBioc.r graph EBImage
+RUN install2.r --error --deps TRUE --skipinstalled igraph rbenchmark stringi stringr
+RUN install2.r --error --deps TRUE --skipinstalled rgdal rgeos spdep
+RUN install2.r --error --deps TRUE --skipinstalled ncdf4 proj4 raster rasterVis
+RUN install2.r --error --deps TRUE --skipinstalled ggrepel devtools pbapply
+RUN install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires
+RUN install2.r --error --deps TRUE --skipinstalled leaflet lidR mapdata maptools mapview RNetCDF geonames tmap gstat
+RUN install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy
+
 ## Add r user
-RUN groupadd -r r && useradd -r -m -g r -G sudo,r r && chown -R r:r ${HOME}
+ENV RUSER=r
+ENV RGROUP=r
+ENV HOME=/home/${RUSER}
+RUN groupadd -r ${RGROUP} && useradd -r -m -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
+RUN chown -R ${RUSER}:${RGROUP} ${HOME}
 
 WORKDIR ${HOME}
-USER r
+USER ${RUSER}
 
 CMD ["bash"]
