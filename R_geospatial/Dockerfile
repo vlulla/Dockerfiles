@@ -39,22 +39,22 @@ RUN apt-get update -qq -y \
      unixodbc-dev \
      zstd libzstd1 libzstd-dev \
      libharfbuzz-dev libfribidi-dev \
-   && ln -s /usr/lib/x86_64-linux-gnu/libgeos-3.7.1.so /usr/lib/x86_64-linux-gnu/libgeos.so
+   && cd /usr/lib/x86_64-linux-gnu && ln -s libgeos-`pkg-config --modversion geos`.so libgeos.so
 
 ## sf, sp, and RSQLite are at the top because they have lots of dependencies!
 ## simplifies other package installations...especially with --skipinstalled
 
-RUN install2.r --error --deps TRUE --skipinstalled sf sp RSQLite
-RUN install2.r --error --deps TRUE --skipinstalled jsonlite sqldf
-RUN install.r --error --deps TRUE --skipinstalled BiocManager
-RUN installBioc.r graph EBImage
-RUN install2.r --error --deps TRUE --skipinstalled igraph rbenchmark stringi stringr
-RUN install2.r --error --deps TRUE --skipinstalled rgdal rgeos spdep
-RUN install2.r --error --deps TRUE --skipinstalled ncdf4 proj4 raster rasterVis
-RUN install2.r --error --deps TRUE --skipinstalled ggrepel devtools pbapply
-RUN install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires
-RUN install2.r --error --deps TRUE --skipinstalled leaflet lidR mapdata maptools mapview RNetCDF geonames tmap gstat
-RUN install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy
+RUN  install2.r --error --deps TRUE --skipinstalled sf sp RSQLite \
+  && install2.r --error --deps TRUE --skipinstalled jsonlite sqldf \
+  && install.r  --error --deps TRUE --skipinstalled BiocManager \
+  && installBioc.r graph EBImage \
+  && install2.r --error --deps TRUE --skipinstalled igraph rbenchmark stringi stringr \
+  && install2.r --error --deps TRUE --skipinstalled rgdal rgeos spdep \
+  && install2.r --error --deps TRUE --skipinstalled ncdf4 proj4 raster rasterVis \
+  && install2.r --error --deps TRUE --skipinstalled ggrepel devtools pbapply \
+  && install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires \
+  && install2.r --error --deps TRUE --skipinstalled leaflet lidR mapdata maptools mapview RNetCDF geonames tmap gstat \
+  && install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy
 
 ## Add r user
 ENV RUSER=r
