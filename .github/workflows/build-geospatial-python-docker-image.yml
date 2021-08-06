@@ -5,7 +5,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: default-make-rule
-        uses: actions/checkout@v2
         run: cd python_geospatial && make
 
 
