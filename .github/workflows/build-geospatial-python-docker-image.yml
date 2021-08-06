@@ -4,7 +4,9 @@ jobs:
   build-image:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout-repo
+        uses: actions/checkout@v2
       - name: default-make-rule
-        run: ls -lh ${{ github.repository }}
+        run: ls -lh ${{ github.workspace }}
 
 
