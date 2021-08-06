@@ -5,6 +5,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: default-make-rule
-        run: cd python_geospatial && make
+        run: ls ${{ github.workspace }}
 
 
