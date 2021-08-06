@@ -7,6 +7,6 @@ jobs:
       - name: checkout-repo
         uses: actions/checkout@v2
       - name: default-make-rule
-        run: ls -lh ${{ github.workspace }}
+        run: cd python_geospatial && make
 
 
