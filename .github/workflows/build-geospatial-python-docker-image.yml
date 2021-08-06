@@ -1,0 +1,11 @@
+name: build-geospatial-python-docker-image
+on: [push]
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: default-make-rule
+        uses: actions/checkout@v2
+        run: cd python_geospatial && make
+
+
