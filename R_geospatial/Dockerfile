@@ -5,7 +5,7 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ## Buid with command: docker build -t r_geospatial .
 ##
-## Run with command: docker run --rm -it --name geospatialR r_geospatial
+## Run with command: docker run --rm -it --hostname R-geospatial --name geospatialR r_geospatial
 
 ## ENV DISPLAY :0
 RUN apt-get update -qq -y \
@@ -60,7 +60,7 @@ RUN  install2.r --error --deps TRUE --skipinstalled sf sp RSQLite \
 ENV RUSER=r
 ENV RGROUP=r
 ENV HOME=/home/${RUSER}
-RUN groupadd -r ${RGROUP} && useradd -r -m -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
+RUN groupadd ${RGROUP} && useradd -m -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
 RUN chown -R ${RUSER}:${RGROUP} ${HOME}
 
 WORKDIR ${HOME}

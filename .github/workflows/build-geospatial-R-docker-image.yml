@@ -1,0 +1,13 @@
+
+name: build-geospatial-R-docker-image
+on: [push]
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Default make rule
+        run: cd R_geospatial && make
+
+
