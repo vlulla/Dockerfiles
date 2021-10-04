@@ -12,6 +12,7 @@ RUN apt-get update -qq -y \
    && apt-get install -t unstable -y --no-install-recommends \
      bwidget \
      default-jdk \
+     file \
      lbzip2 \
      libcairo2-dev \
      libfftw3-dev \
@@ -54,7 +55,7 @@ RUN  install2.r --error --deps TRUE --skipinstalled sf sp RSQLite \
   && install2.r --error --deps TRUE --skipinstalled ggrepel devtools pbapply \
   && install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires \
   && install2.r --error --deps TRUE --skipinstalled leaflet lidR mapdata maptools mapview RNetCDF geonames tmap gstat \
-  && install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy
+  && install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy arrow
 
 ## Add r user
 ENV RUSER=r
