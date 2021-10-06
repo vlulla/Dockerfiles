@@ -16,7 +16,8 @@ RUN apt-get install -y python3 python3-hypothesis python3-pandas python3-sklearn
       python3-shapely python3-geojson python3-geopy python3-geomet python3-gmplot python3-grib \
       python3-h5py python3-hdf4 python3-imageio python3-jinja2 python3-mapproxy \
       python3-markdown2 python3-opencv python3-pil python3-pip python3-pkgconfig python3-protobuf python3-yaml \
-      python3-dask python3-distributed python3-arrow
+      python3-dask python3-distributed python3-boto3
+RUN pip install pyarrow
 
 ## RUN apt-get install -y python3-boto3 python3-azure-cli 
 
