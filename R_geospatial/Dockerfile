@@ -25,6 +25,7 @@ RUN apt-get update -qq -y \
      libhdf5-dev \
      libjq-dev \
 ##      liblwgeom-dev \
+     libmagick++-dev \
      libproj-dev \
      libprotobuf-dev \
      libnetcdf-dev \
