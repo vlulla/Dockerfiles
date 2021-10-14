@@ -4,7 +4,7 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ## Buid with command: docker build -t python_geospatial .
 ##
-## Run with command: docker run --rm -it --hostname geospatialPython --name geospatialPython python_geospatial
+## Run with command: docker run --rm -ti --hostname geospatialPython --name geospatialPython --net mynet python_geospatial
 
 ## ENV DISPLAY :0
 RUN apt-get update -qq -y \

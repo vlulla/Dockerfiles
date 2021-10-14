@@ -3,6 +3,7 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ## Build: docker build -t lilypond .
 ## Run  : docker run --rm -it --name lilypond lilypond
+ARG DEBIAN_FRONTEND=noninteractive
 
 ## ENV DISPLAY :0
 RUN apt-get update -qq -y \

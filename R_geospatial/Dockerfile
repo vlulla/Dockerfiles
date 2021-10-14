@@ -5,7 +5,7 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ## Buid with command: docker build -t r_geospatial .
 ##
-## Run with command: docker run --rm -it --hostname R-geospatial --name geospatialR r_geospatial
+## Run with command: docker run --rm -it --hostname R-geospatial --name geospatialR --net mynet r_geospatial
 
 ## ENV DISPLAY :0
 RUN apt-get update -qq -y \
@@ -55,7 +55,7 @@ RUN  install2.r --error --deps TRUE --skipinstalled sf sp RSQLite \
   && install2.r --error --deps TRUE --skipinstalled ggrepel devtools pbapply \
   && install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires \
   && install2.r --error --deps TRUE --skipinstalled leaflet lidR mapdata maptools mapview RNetCDF geonames tmap gstat \
-  && install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy arrow
+  && install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy arrow terra
 
 ## Add r user
 ENV RUSER=r
