@@ -59,9 +59,9 @@ RUN  install2.r --error --deps TRUE --skipinstalled sf sp RSQLite \
   && install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy arrow terra stars gdalcubes
 
 ## Add r user
-ENV RUSER=r
-ENV RGROUP=r
-ENV HOME=/home/${RUSER}
+ARG RUSER=r
+ARG RGROUP=r
+ARG HOME=/home/${RUSER}
 RUN groupadd ${RGROUP} && useradd -m -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
 RUN chown -R ${RUSER}:${RGROUP} ${HOME}
 

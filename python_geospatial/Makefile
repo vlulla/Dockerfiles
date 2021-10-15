@@ -2,7 +2,7 @@
 .DEFAULT: all
 
 all: Dockerfile
-	sed -e "s/^ENV UID=/&$$(id -u)/g;s/^ENV GID=/&$$(id -g)/g" $< | docker build --tag python_geospatial -f - .
+	sed -e "s/^ARG UID=/&$$(id -u)/g;s/^ARG GID=/&$$(id -g)/g" $< | docker build --tag python_geospatial -f - .
 
 clean:
 	@echo "Do cleaning here"

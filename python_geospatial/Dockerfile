@@ -21,13 +21,13 @@ RUN pip install pyarrow
 
 ## RUN apt-get install -y python3-boto3 python3-azure-cli 
 
-ENV UID=
-ENV GID=
+ARG UID=
+ARG GID=
 
 ## Add a user
-ENV PYTHONUSER=vijay
-ENV PYTHONGROUP=vijay
-ENV HOME=/home/${PYTHONUSER}
+ARG PYTHONUSER=vijay
+ARG PYTHONGROUP=vijay
+ARG HOME=/home/${PYTHONUSER}
 RUN groupadd -g ${GID} ${PYTHONGROUP} && useradd -m -u ${UID} -g ${PYTHONGROUP} -G sudo,${PYTHONGROUP} ${PYTHONUSER}
 RUN chown -R ${PYTHONUSER}:${PYTHONGROUP} ${HOME}
 
