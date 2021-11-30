@@ -20,6 +20,8 @@ RUN apt-get install -y python3 python3-hypothesis python3-pandas python3-sklearn
 RUN pip install pyarrow
 
 ## RUN apt-get install -y python3-boto3 python3-azure-cli 
+RUN apt-get install -y gdal-bin libgdal-dev
+RUN pip install GDAL
 
 ARG UID=
 ARG GID=
