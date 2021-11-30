@@ -58,7 +58,7 @@ RUN  install2.r --error --deps TRUE --skipinstalled sf sp RSQLite \
   && install2.r --error --deps TRUE --skipinstalled leaflet lidR mapdata maptools mapview RNetCDF geonames tmap gstat \
   && install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy arrow terra stars gdalcubes
 
-RUN apt-get install -y gdal-bin
+RUN apt-get install -y gdal-bin jq
 
 ## Add r user
 ARG RUSER=r
