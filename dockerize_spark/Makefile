@@ -6,10 +6,9 @@ all: Dockerfile
 
 clean:
 	@echo "Do cleaning here"
-	rm -rf Dockerfile.singularity
 
 cleanall: clean
-	docker rmi r_geospatial r_geospatial_for_singularity rocker/r-base
+	docker rmi dockerized_spark 
 
 
 
