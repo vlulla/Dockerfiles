@@ -23,6 +23,7 @@ RUN pip install pyarrow
 RUN apt-get install -y gdal-bin libgdal-dev
 RUN pip install GDAL
 
+RUN apt-get install -y spatialite-bin python3-zarr
 ARG UID=
 ARG GID=
 
