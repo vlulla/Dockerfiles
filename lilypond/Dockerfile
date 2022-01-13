@@ -15,4 +15,15 @@ RUN cd && cd lilypond-2.23.5 && ./autogen.sh --noconfigure && mkdir -p build && 
 RUN cd && cd lilypond-2.23.5/build && make install
 RUN cd && rm -rf lilypond-2.23.5 lilypond-2.23.5.tar.gz
 
+ARG GID=
+ARG UID=
+ARG USER=
+ARG GROUP=
+ARG HOME=/home/${USER}
+RUN groupadd -g ${GID} ${GROUP} && useradd -m -u ${UID} -g ${GROUP} -G sudo ${USER}
+RUN chown -R ${USER}:${GROUP} ${HOME}
+
+USER ${USER}
+WORKDIR ${HOME}
+
 CMD ["bash"]
