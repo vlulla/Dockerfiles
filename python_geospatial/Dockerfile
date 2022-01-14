@@ -28,13 +28,13 @@ ARG UID=
 ARG GID=
 
 ## Add a user
-ARG PYTHONUSER=vijay
-ARG PYTHONGROUP=vijay
-ARG HOME=/home/${PYTHONUSER}
-RUN groupadd -g ${GID} ${PYTHONGROUP} && useradd -m -u ${UID} -g ${PYTHONGROUP} -G sudo,${PYTHONGROUP} ${PYTHONUSER}
-RUN chown -R ${PYTHONUSER}:${PYTHONGROUP} ${HOME}
+ARG PYUSR=
+ARG PYGRP=
+ARG HOME=/home/${PYUSR}
+RUN groupadd -g ${GID} ${PYGRP} && useradd -m -u ${UID} -g ${PYGRP} -G sudo,${PYGRP} ${PYUSR}
+RUN chown -R ${PYUSR}:${PYGRP} ${HOME}
 
 WORKDIR ${HOME}
-USER ${PYTHONUSER}
+USER ${PYUSR}
 
 CMD ["bash"]
