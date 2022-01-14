@@ -5,7 +5,7 @@ ARG GID=
 ARG UID=
 
 RUN apt-get update -qq -y && apt-get install -y --no-install-recommends default-jdk openjdk-11-jdk gawk sed vim
-RUN apt-get install -y curl iproute2 net-tools
+RUN apt-get install -y curl iproute2 net-tools iputils-ping
 ## echo $(dirname $(update-alternatives --list java))
 ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
 

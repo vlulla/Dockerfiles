@@ -27,7 +27,7 @@ RUN cd && curl -SL -O http://www.gaia-gis.it/gaia-sins/spatialite-tools-5.0.0.ta
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
-RUN apt-get install -y iproute2 net-tools
+RUN apt-get install -y iproute2 net-tools iputils-ping
 
 ARG UID=
 ARG GID=

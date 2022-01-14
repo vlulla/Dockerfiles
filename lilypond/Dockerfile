@@ -15,7 +15,7 @@ RUN cd && cd lilypond-2.23.5 && ./autogen.sh --noconfigure && mkdir -p build && 
 RUN cd && cd lilypond-2.23.5/build && make install
 RUN cd && rm -rf lilypond-2.23.5 lilypond-2.23.5.tar.gz
 
-RUN apt-get install -y iproute2 net-tools
+RUN apt-get install -y iproute2 net-tools iputils-ping
 
 ARG GID=
 ARG UID=

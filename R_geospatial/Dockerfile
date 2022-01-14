@@ -59,7 +59,7 @@ RUN  install2.r --error --deps TRUE --skipinstalled sf sp RSQLite \
   && install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy arrow terra stars gdalcubes
 
 RUN apt-get install -y gdal-bin jq
-RUN apt-get install -y iproute2 net-tools
+RUN apt-get install -y iproute2 net-tools iputils-ping
 
 ## Add a regular user
 ARG RUSER=
