@@ -60,9 +60,9 @@ RUN  install2.r --error --deps TRUE --skipinstalled sf sp RSQLite \
 
 RUN apt-get install -y gdal-bin jq
 
-## Add r user
-ARG RUSER=r
-ARG RGROUP=r
+## Add a regular user
+ARG RUSER=
+ARG RGROUP=
 ARG HOME=/home/${RUSER}
 RUN groupadd ${RGROUP} && useradd -m -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
 RUN chown -R ${RUSER}:${RGROUP} ${HOME}
