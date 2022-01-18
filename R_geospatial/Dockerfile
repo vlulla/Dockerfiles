@@ -64,8 +64,8 @@ RUN apt-get install -y iproute2 net-tools iputils-ping
 ## Add a regular user
 ARG UID=1001
 ARG GID=1001
-ARG RUSER=
-ARG RGROUP=
+ARG RUSER=r
+ARG RGROUP=r
 ARG HOME=/home/${RUSER}
 RUN groupadd -g ${GID} ${RGROUP} && useradd -m -u ${UID} -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
 RUN chown -R ${RUSER}:${RGROUP} ${HOME}

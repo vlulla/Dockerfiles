@@ -2,7 +2,7 @@
 .DEFAULT: all
 
 all: Dockerfile
-	sed -e "s/^ARG UID=$$/&$$(id -u)/g;s/^ARG GID=$$/&$$(id -g)/g;s/^ARG RUSER=$$/&$$(id -un)/g;s/^ARG RGROUP=$$/&$$(id -gn)/g" $< | docker build -t r_geospatial -f - .
+	sed -e "s/^ARG UID=$$/&$$(id -u)/g;s/^ARG GID=$$/&$$(id -g)/g" $< | docker build -t r_geospatial -f - .
 
 Dockerfile.singularity: Dockerfile
 	sed -e '/RUN groupadd/d' -e '/USER r/d' $< > $@
