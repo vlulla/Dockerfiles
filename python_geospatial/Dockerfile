@@ -6,6 +6,8 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 ##
 ## Run with command: docker run --rm -ti --hostname geospatialPython --name geospatialPython --net mynet python_geospatial
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 ## ENV DISPLAY :0
 RUN apt-get update -qq -y \
    && apt-get install -y --no-install-recommends build-essential apt-utils
