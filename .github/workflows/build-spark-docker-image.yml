@@ -1,5 +1,7 @@
 name: build-spark-docker-image
-on: [push]
+on:
+  push:
+    - main
 jobs:
   build-image:
     runs-on: ubuntu-latest

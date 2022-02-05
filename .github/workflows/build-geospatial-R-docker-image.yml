@@ -1,6 +1,8 @@
 
 name: build-geospatial-R-docker-image
-on: [push]
+on: 
+  push:
+    - main
 jobs:
   build-image:
     runs-on: ubuntu-latest
