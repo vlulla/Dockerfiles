@@ -7,6 +7,8 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 ##
 ## Run with command: docker run --rm -it --hostname R-geospatial --name geospatialR --net mynet r_geospatial
 
+## SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 ## ENV DISPLAY :0
 RUN apt-get update -qq -y \
    && apt-get install -t unstable -y --no-install-recommends \
@@ -46,20 +48,17 @@ RUN apt-get update -qq -y \
 ## sf, sp, and RSQLite are at the top because they have lots of dependencies!
 ## simplifies other package installations...especially with --skipinstalled
 
-RUN  install2.r --error --deps TRUE --skipinstalled sf sp RSQLite \
-  && install2.r --error --deps TRUE --skipinstalled jsonlite sqldf \
-  && install.r  --error --deps TRUE --skipinstalled BiocManager \
-  && installBioc.r graph EBImage \
-  && install2.r --error --deps TRUE --skipinstalled igraph rbenchmark stringi stringr \
-  && install2.r --error --deps TRUE --skipinstalled rgdal rgeos spdep \
-  && install2.r --error --deps TRUE --skipinstalled ncdf4 proj4 raster rasterVis \
-  && install2.r --error --deps TRUE --skipinstalled ggrepel devtools pbapply \
-  && install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires \
-  && install2.r --error --deps TRUE --skipinstalled leaflet lidR mapdata maptools mapview RNetCDF geonames tmap gstat \
-  && install2.r --error --deps TRUE --skipinstalled data.table caret classInt e1071 gbm glmnet nnet xgboost deldir simstudy arrow terra stars gdalcubes
+RUN apt-get install -y gdal-bin jq iproute2 net-tools iputils-ping cmake
 
-RUN apt-get install -y gdal-bin jq
-RUN apt-get install -y iproute2 net-tools iputils-ping
+RUN install2.r --error --skipinstalled BiocManager && installBioc.r BiocVersion
+RUN  install2.r --error --deps TRUE --skipinstalled Rcpp devtools RcppArmadillo rbenchmark \
+  && installBioc.r graph EBImage \
+  && install2.r --error --deps TRUE --skipinstalled jsonlite stringi stringr data.table sqldf igraph simstudy ggrepel pbapply \
+            caret e1071 gbm glmnet nnet xgboost randomForest arrow classInt fst RSQLite
+
+RUN install2.r --error --deps TRUE --skipinstalled rgdal rgeos spdep sf sp ncdf4 proj4 raster rasterVis terra gdalcubes lidR
+RUN install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires
+
 
 ## Add a regular user
 ARG UID=1001
