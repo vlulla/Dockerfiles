@@ -1,7 +1,8 @@
 name: build-geospatial-python-docker-image
 on: 
   push:
-    - main
+    branhces:
+      - main
 jobs:
   build-image:
     runs-on: ubuntu-latest
