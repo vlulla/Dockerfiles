@@ -20,7 +20,7 @@ RUN mkdir -p ${HOME}/code/spark
 WORKDIR ${HOME}/code/spark
 RUN curl -SL -O https://dlcdn.apache.org/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2.tgz && tar xf spark-3.2.1-bin-hadoop3.2.tgz && rm -rf spark-3.2.1-bin-hadoop3.2.tgz
 ENV SPARK_HOME="${HOME}/code/spark/spark-3.2.1-bin-hadoop3.2"
-ENV PATH="${PATH}:${SPARK_HOME}/bin"
+ENV PATH="${PATH:+${PATH}:}${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
 WORKDIR ${HOME}
 
 CMD ["bash"]
