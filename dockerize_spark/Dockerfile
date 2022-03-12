@@ -18,9 +18,12 @@ RUN chown -R ${USER}:${GROUP} ${HOME}
 USER ${USER}
 RUN mkdir -p ${HOME}/code/spark 
 WORKDIR ${HOME}/code/spark
-RUN curl -SL -O https://dlcdn.apache.org/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2.tgz && tar xf spark-3.2.1-bin-hadoop3.2.tgz && rm -rf spark-3.2.1-bin-hadoop3.2.tgz
-ENV SPARK_HOME="${HOME}/code/spark/spark-3.2.1-bin-hadoop3.2"
-ENV PATH="${PATH:+${PATH}:}${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
+RUN curl -SL -O https://dlcdn.apache.org/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2-scala2.13.tgz && tar xf spark-3.2.1-bin-hadoop3.2-scala2.13.tgz && rm -rf spark-3.2.1-bin-hadoop3.2-scala2.13.tgz
+RUN curl -SL -O https://dlcdn.apache.org/hadoop/common/hadoop-3.3.2/hadoop-3.3.2.tar.gz && tar xf hadoop-3.3.2.tar.gz && rm -rf hadoop-3.3.2.tar.gz
+ENV HADOOP_HOME="${HOME}/code/spark/hadoop-3.3.2"
+ENV SPARK_HOME="${HOME}/code/spark/spark-3.2.1-bin-hadoop3.2-scala2.13"
+ENV PATH="${PATH:+${PATH}:}${HADOOP_HOME}/bin:${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${HADOOP_HOME}/lib/native"
 WORKDIR ${HOME}
 
 CMD ["bash"]
