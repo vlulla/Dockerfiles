@@ -50,6 +50,8 @@ RUN apt-get update -qq -y \
 
 RUN apt-get install -y gdal-bin jq iproute2 net-tools iputils-ping cmake
 
+RUN sed -i -e '/options(repos = r)/ s_(\([^)]\+\))_(\1, Ncpus = parallel::detectCores() - 2)_g' /usr/lib/R/etc/Rprofile.site
+
 RUN install2.r --error --skipinstalled BiocManager && installBioc.r BiocVersion
 RUN  install2.r --error --deps TRUE --skipinstalled Rcpp devtools RcppArmadillo rbenchmark \
   && installBioc.r graph EBImage \
