@@ -48,7 +48,7 @@ RUN apt-get update -qq -y \
 ## sf, sp, and RSQLite are at the top because they have lots of dependencies!
 ## simplifies other package installations...especially with --skipinstalled
 
-RUN apt-get install -y gdal-bin jq iproute2 net-tools iputils-ping cmake
+RUN apt-get install --yes gdal-bin jq iproute2 net-tools iputils-ping cmake cargo
 
 RUN sed -i -e '/options(repos = r)/ s_(\([^)]\+\))_(\1, Ncpus = parallel::detectCores() - 2)_g' /usr/lib/R/etc/Rprofile.site
 
