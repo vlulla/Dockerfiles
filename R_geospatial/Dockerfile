@@ -58,6 +58,7 @@ RUN  install2.r --error --deps TRUE --skipinstalled Rcpp devtools RcppArmadillo 
   && install2.r --error --deps TRUE --skipinstalled jsonlite stringi stringr data.table sqldf igraph simstudy ggrepel pbapply \
             caret e1071 gbm glmnet nnet xgboost randomForest arrow classInt fst RSQLite
 
+RUN apt-get install --yes libavfilter-dev
 RUN install2.r --error --deps TRUE --skipinstalled rgdal rgeos spdep sf sp ncdf4 proj4 raster rasterVis terra gdalcubes lidR
 RUN install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires
 
