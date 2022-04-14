@@ -1,5 +1,4 @@
-## FROM rocker/r-base
-FROM r-base
+FROM ubuntu:impish
 
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
@@ -7,60 +6,34 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 ##
 ## Run with command: docker run --rm -it --hostname R-geospatial --name geospatialR --net mynet r_geospatial
 
-## SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
 ## ENV DISPLAY :0
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ UTC
+
 RUN apt-get update -qq -y \
-   && apt-get install -t unstable -y --no-install-recommends \
-     bwidget \
-     default-jdk \
-     file \
-     lbzip2 \
-     libcairo2-dev \
-     libfftw3-dev \
-     libgdal-dev \
-     libgeos-dev \
-     libgsl0-dev \
-     libgl1-mesa-dev \
-     libglu1-mesa-dev \
-     libhdf4-alt-dev \
-     libhdf5-dev \
-     libjq-dev \
-##      liblwgeom-dev \
-     libmagick++-dev \
-     libproj-dev \
-     libprotobuf-dev \
-     libnetcdf-dev \
-     libsqlite3-dev \
-     libssh2-1-dev \
-     libssl-dev \
-     libudunits2-dev \
-     libv8-dev \
-     libxt-dev \
-     netcdf-bin \
-     protobuf-compiler \
-     tk-dev \
-     unixodbc-dev \
-     zstd libzstd1 libzstd-dev \
-     libharfbuzz-dev libfribidi-dev \
-   && cd /usr/lib/x86_64-linux-gnu && ln -s libgeos-`pkg-config --modversion geos`.so libgeos.so
-
-## sf, sp, and RSQLite are at the top because they have lots of dependencies!
-## simplifies other package installations...especially with --skipinstalled
-
-RUN apt-get install --yes gdal-bin jq iproute2 net-tools iputils-ping cmake cargo
+   && apt-get install -y --no-install-recommends software-properties-common dirmngr wget \
+   && wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
+   && echo "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" | tee -a /etc/apt/sources.list.d/R.list \
+   && apt-get update \
+   && apt-get install -y --no-install-recommends libcurl4-openssl-dev libssl-dev libxml2-dev libudunits2-dev libopenblas-base libatlas3-base libgdal-dev libfftw3-dev gdal-bin \
+     r-base r-base-dev r-recommended r-cran-docopt littler \
+  && ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r \
+  && ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
+  && ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
+  && ln -s /usr/lib/R/site-library/littler/examples/installBioc.r /usr/local/bin/installBioc.r \
+  && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN sed -i -e '/options(repos = r)/ s_(\([^)]\+\))_(\1, Ncpus = parallel::detectCores() - 2)_g' /usr/lib/R/etc/Rprofile.site
 
-RUN install2.r --error --skipinstalled BiocManager && installBioc.r BiocVersion
-RUN  install2.r --error --deps TRUE --skipinstalled Rcpp devtools RcppArmadillo rbenchmark \
-  && installBioc.r graph EBImage \
-  && install2.r --error --deps TRUE --skipinstalled jsonlite stringi stringr data.table sqldf igraph simstudy ggrepel pbapply \
-            caret e1071 gbm glmnet nnet xgboost randomForest arrow classInt fst RSQLite
+RUN install2.r --error --skipinstalled BiocManager && installBioc.r BiocVersion \
+ && install2.r --error --skipinstalled devtools Rcpp RcppArmadillo ggplot2 rbenchmark \
+ && installBioc.r graph EBImage \
+ && install2.r --error --skipinstalled jsonlite stringi stringr data.table sqldf igraph simstudy ggrepel pbapply \
+          caret e1071 gbm glmnet nnet xgboost randomForest arrow classInt fst RSQLite rgdal sf sp raster terra lidR
 
-RUN apt-get install --yes libavfilter-dev
-RUN install2.r --error --deps TRUE --skipinstalled rgdal rgeos spdep sf sp ncdf4 proj4 raster rasterVis terra gdalcubes lidR
-RUN install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires
+RUN install2.r --error --skipinstalled rgeos \
+ && install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires
 
 
 ## Add a regular user
