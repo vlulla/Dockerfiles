@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:jammy
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ## Build: docker build -t lilypond .
