@@ -1,4 +1,4 @@
-FROM ubuntu:impish
+FROM ubuntu:jammy
 
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
