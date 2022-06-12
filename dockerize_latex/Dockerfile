@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:jammy
 
 ENV DEBIAN_FRONTEND noninteractive
 
