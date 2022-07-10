@@ -10,12 +10,12 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ UTC
 
-RUN apt-get update -qq -y \
-   && apt-get install -y --no-install-recommends software-properties-common dirmngr wget \
+RUN apt-get update -qq --yes \
+   && apt-get install --yes --no-install-recommends software-properties-common dirmngr wget \
    && wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
    && echo "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" | tee -a /etc/apt/sources.list.d/R.list \
    && apt-get update \
-   && apt-get install -y --no-install-recommends libcurl4-openssl-dev libssl-dev libxml2-dev libudunits2-dev libopenblas-base libatlas3-base libgdal-dev libfftw3-dev gdal-bin \
+   && apt-get install -y --no-install-recommends libcurl4-openssl-dev libssl-dev libxml2-dev libudunits2-dev libopenblas-base libatlas3-base libgdal-dev libfftw3-dev gdal-bin libgit2-dev \
      r-base r-base-dev r-recommended r-cran-docopt littler \
   && ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r \
   && ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
