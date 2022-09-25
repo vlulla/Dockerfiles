@@ -4,7 +4,7 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ## Buid with command: docker build -t r_geospatial .
 ##
-## Run with command: docker run --rm -it --hostname R-geospatial --name geospatialR --net mynet r_geospatial
+## Run with command: docker run --rm -it --init --hostname R-geospatial --name geospatialR --net mynet r_geospatial
 
 ## ENV DISPLAY :0
 ENV DEBIAN_FRONTEND=noninteractive
@@ -23,6 +23,8 @@ RUN apt-get update -qq --yes \
   && ln -s /usr/lib/R/site-library/littler/examples/installBioc.r /usr/local/bin/installBioc.r \
   && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
   && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends libfontconfig1-dev libharfbuzz-dev libfribidi-dev
 
 RUN sed -i -e '/options(repos = r)/ s_(\([^)]\+\))_(\1, Ncpus = parallel::detectCores() - 2)_g' /usr/lib/R/etc/Rprofile.site
 
