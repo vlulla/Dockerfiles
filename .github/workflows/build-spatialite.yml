@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - spatialite-tools/**
 jobs:
   build-image:
     runs-on: ubuntu-latest

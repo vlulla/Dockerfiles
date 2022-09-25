@@ -3,6 +3,8 @@ on:
   push:
     branhces:
       - main
+    paths:
+      - python_geospatial/**
 jobs:
   build-image:
     runs-on: ubuntu-latest

@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - dockerize_spark/**
 jobs:
   build-image:
     runs-on: ubuntu-latest
