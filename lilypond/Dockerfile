@@ -11,11 +11,10 @@ RUN apt-get install -y perl guile-3.0 guile-3.0-dev guile-2.2 guile-2.2-dev pyth
   fonts-texgyre tidy extractpdfmark texlive-metapost curl fontforge texlive-lang-cyrillic gettext texinfo texi2html install-info texlive-xetex
 
 RUN cd && curl -SL -O https://lilypond.org/download/source/v2.23/lilypond-2.23.6.tar.gz && tar xf lilypond-2.23.6.tar.gz
-RUN cd && cd lilypond-2.23.6 && ./autogen.sh --noconfigure && mkdir -p build && cd build && ../configure && make -j 4 all && make test
-RUN cd && cd lilypond-2.23.6/build && make install
+RUN cd && cd lilypond-2.23.6 && mkdir -p build && cd build && ../autogen.sh --noconfigure && ../configure && make -j 4 all && make install
 RUN cd && rm -rf lilypond-2.23.6 lilypond-2.23.6.tar.gz
 
-RUN apt-get install -y iproute2 net-tools iputils-ping
+## RUN apt-get install -y iproute2 net-tools iputils-ping
 
 ARG GID=
 ARG UID=
