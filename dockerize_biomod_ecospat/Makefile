@@ -4,7 +4,7 @@ all: build
 	@echo "call with a target"
 
 build: Dockerfile
-	docker build -t ecospat_tuning -f $< .
+	docker buildx build -t ecospat_tuning -f $< .
 
 clean:
 	@echo "Do cleaning here"

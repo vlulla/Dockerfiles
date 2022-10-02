@@ -4,10 +4,10 @@
 all: eems alpine
 
 eems: Dockerfile
-	docker build --build-arg USER_ID=$$(id -u) --build-arg GROUP_ID=$$(id -g) -t eems -f $< .
+	docker buildx build --build-arg USER_ID=$$(id -u) --build-arg GROUP_ID=$$(id -g) -t eems -f $< .
 
 ubuntu: Dockerfile.ubuntu
-	docker build --build-arg USER_ID=$$(id -u) --build-arg GROUP_ID=$$(id -g) -t eems_ubuntu -f $< .
+	docker buildx build --build-arg USER_ID=$$(id -u) --build-arg GROUP_ID=$$(id -g) -t eems_ubuntu -f $< .
 
 clean:
 	@echo "Do cleaning here"
