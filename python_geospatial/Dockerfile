@@ -11,7 +11,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ## ENV DISPLAY :0
 RUN apt-get update -qq --yes \
    && apt-get install --yes --no-install-recommends build-essential apt-utils \
-      libgeos-dev libxml2 libxml2-dev pkg-config curl wget jq \
+      libgeos-dev libxml2 libxml2-dev pkg-config curl wget jq parallel \
       python3 python3-hypothesis python3-pandas python3-sklearn ipython3 sqlite3 python3-matplotlib \
       python3-rasterio python3-csvkit python3-gdal python3-geopandas python3-tables python3-sqlalchemy  \
       python3-sqlalchemy-utils python3-dateutil python3-geoip2 python3-cartopy python3-fastkml python3-fiona \

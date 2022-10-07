@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ UTC
 
 RUN apt-get update -qq --yes \
-   && apt-get install --yes --no-install-recommends software-properties-common dirmngr wget \
+   && apt-get install --yes --no-install-recommends software-properties-common dirmngr wget  parallel \
    && wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
    && echo "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" | tee -a /etc/apt/sources.list.d/R.list \
    && apt-get update \
