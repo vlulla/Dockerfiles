@@ -1,4 +1,4 @@
-FROM debian
+FROM debian:bullseye
 
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
@@ -30,7 +30,7 @@ ARG GID=
 ARG PYUSR=
 ARG PYGRP=
 ARG HOME=/home/${PYUSR}
-RUN groupadd -g ${GID} ${PYGRP} && useradd -m -u ${UID} -g ${PYGRP} -G sudo,${PYGRP} ${PYUSR}
+RUN groupadd -g ${GID} ${PYGRP} && useradd -l -m -u ${UID} -g ${PYGRP} -G sudo,${PYGRP} ${PYUSR}
 RUN chown -R ${PYUSR}:${PYGRP} ${HOME}
 
 WORKDIR ${HOME}

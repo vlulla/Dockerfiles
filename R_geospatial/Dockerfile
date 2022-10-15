@@ -24,7 +24,8 @@ RUN apt-get update -qq --yes \
   && rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
   && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y --no-install-recommends libfontconfig1-dev libharfbuzz-dev libfribidi-dev
+RUN apt-get update && apt-get install -y --no-install-recommends libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN sed -i -e '/options(repos = r)/ s_(\([^)]\+\))_(\1, Ncpus = parallel::detectCores() - 2)_g' /usr/lib/R/etc/Rprofile.site
 
@@ -44,7 +45,7 @@ ARG GID=1001
 ARG RUSER=r
 ARG RGROUP=r
 ARG HOME=/home/${RUSER}
-RUN groupadd -g ${GID} ${RGROUP} && useradd -m -u ${UID} -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
+RUN groupadd -g ${GID} ${RGROUP} && useradd -l -m -u ${UID} -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
 RUN chown -R ${RUSER}:${RGROUP} ${HOME}
 
 WORKDIR ${HOME}
