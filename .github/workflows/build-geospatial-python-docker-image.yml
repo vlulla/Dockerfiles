@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - python_geospatial/**
+      - scipy_python/**
 jobs:
   build-image:
     runs-on: ubuntu-latest
