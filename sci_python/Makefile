@@ -2,7 +2,7 @@
 .DEFAULT: all
 
 all: Dockerfile
-	docker build -t sci_python -f $< .
+	docker buildx build -t sci_python -f $< .
 
 
 clean:
