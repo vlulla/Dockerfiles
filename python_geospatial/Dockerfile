@@ -1,12 +1,12 @@
 FROM debian:bullseye
 
-LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
-
 ## Buid with command: docker build -t python_geospatial .
 ##
 ## Run with command: docker run --rm -ti --init --hostname geospatialPython --name geospatialPython --net mynet python_geospatial
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 ## ENV DISPLAY :0
 RUN apt-get update -qq --yes \

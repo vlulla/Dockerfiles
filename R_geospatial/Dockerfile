@@ -1,13 +1,11 @@
 FROM ubuntu:jammy
 
-LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
-
 ## Buid with command: docker build -t r_geospatial .
 ##
 ## Run with command: docker run --rm -it --init --hostname R-geospatial --name geospatialR --net mynet r_geospatial
 
 ## ENV DISPLAY :0
-ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ UTC
 
 RUN apt-get update -qq --yes \
