@@ -1,0 +1,21 @@
+version: '3.1'
+
+services:
+  database:
+    container_name: db_container
+    image: postgres:15.1-bullseye
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_USER: postgres
+    ports:
+      - "25432:5432"
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: example@example.com
+      PGADMIN_LISTEN_PORT: 8080
+      PGADMIN_DEFAULT_PASSWORD: pgadminpass
+    ports:
+      - "8080:8080"
