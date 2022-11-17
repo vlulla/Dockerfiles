@@ -3,10 +3,10 @@ version: '3.1'
 services:
   database:
     container_name: db_container
-    image: postgres:15.1-bullseye
+    image: postgis/postgis:15-3.3
     restart: always
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: pgpass
       POSTGRES_USER: postgres
     ports:
       - "25432:5432"

@@ -21,3 +21,18 @@ psql > \d
 psql > \q
 $ make down ## calls docker compose -f compose.yaml down
 ```
+
+If you'd still like to use a separate user in this throwaway container here are the steps to follow:
+
+```bash
+$ psql -h localhost -p 25432 -U postgres postgres
+# use the POSTGRES_PASSWORD set in the compose.yaml
+psql #> CREATE ROLE tst WITH LOGIN CREATEDB PASSWORD 'tstpasswd';
+psql #> CREATE DATABASE tst WITH owner = tst;
+psql #> \c tst
+psql #> CREATE EXTENSION postgis; -- now tst database will have postgis enabled database too!
+psql #> \q
+$ psql -h localhost -p 25432 -U tst tst
+# type in the password 'tstpasswd' to login
+```
+Using `docker compose` is handy because it will automatically create/destroy the containers, networks, services that are needed to run the application together.
