@@ -13,7 +13,7 @@ MAKEFLAGS += --no-builtin-rules
 .PHONY: all up down stop start clean
 .DEFAULT_GOAL: all
 
-all: up
+all: start
 up: compose.yaml
 > docker compose -f $< up
 
