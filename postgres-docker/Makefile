@@ -10,12 +10,18 @@ SHELL := bash
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
-.PHONY: all up down clean
+.PHONY: all up down stop start clean
 .DEFAULT_GOAL: all
 
 all: up
 up: compose.yaml
 > docker compose -f $< up
+
+start: compose.yaml
+> docker compose -f $< start
+
+stop: compose.yaml
+> docker compose -f $< stop
 
 down: compose.yaml
 > docker compose -f $< down

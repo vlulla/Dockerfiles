@@ -2,11 +2,19 @@ version: '3.1'
 
 services:
   database:
-    container_name: db_container
+    container_name: postgis
     image: postgis/postgis:15-3.3
     restart: always
+    hostname: docker-postgis
     environment:
       POSTGRES_PASSWORD: pgpass
       POSTGRES_USER: postgres
+      TZ: utc
     ports:
       - "25432:5432"
+    networks:
+      - pgnet
+
+networks:
+  pgnet:
+   name: postgis-net
