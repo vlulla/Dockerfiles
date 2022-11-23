@@ -10,6 +10,8 @@ services:
       POSTGRES_PASSWORD: pgpass
       POSTGRES_USER: postgres
       TZ: utc
+    volumes:
+      - ./20-create-role.sql:/docker-entrypoint-initdb.d/20-create-role.sql
     ports:
       - "25432:5432"
     networks:

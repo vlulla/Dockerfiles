@@ -35,4 +35,7 @@ psql #> \q
 $ psql -h localhost -p 25432 -U tst tst
 # type in the password 'tstpasswd' to login
 ```
+
+This alternative user is now created as a part of `docker-compose up` process. Modify the role creation sql file to your liking. Or, add more sql files as volumes into the yml compose definition file.
+
 Using `docker compose` is handy because it will automatically create/destroy the containers, networks, services that are needed to run the application together.
