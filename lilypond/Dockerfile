@@ -10,9 +10,9 @@ RUN apt-get update -qq -y && apt-get install -y --no-install-recommends build-es
 RUN apt-get install -y perl guile-3.0 guile-3.0-dev guile-2.2 guile-2.2-dev python3 flex bison ghostscript imagemagick zip rsync dblatex libpango1.0-dev \
   fonts-texgyre tidy extractpdfmark texlive-metapost curl fontforge texlive-lang-cyrillic gettext texinfo texi2html install-info texlive-xetex
 
-RUN cd && curl -SL -O https://lilypond.org/download/source/v2.23/lilypond-2.23.6.tar.gz && tar xf lilypond-2.23.6.tar.gz
-RUN cd && cd lilypond-2.23.6 && mkdir -p build && cd build && ../autogen.sh --noconfigure && ../configure && make -j 4 all && make install
-RUN cd && rm -rf lilypond-2.23.6 lilypond-2.23.6.tar.gz
+RUN cd && curl -SL -O https://lilypond.org/download/source/v2.23/lilypond-2.23.81.tar.gz && tar xf lilypond-2.23.81.tar.gz
+RUN cd && cd lilypond-2.23.81 && mkdir -p build && cd build && ../autogen.sh --noconfigure && ../configure && make -j 2 all && make install
+RUN cd && rm -rf lilypond-2.23.81 lilypond-2.23.81.tar.gz
 
 ## RUN apt-get install -y iproute2 net-tools iputils-ping
 
