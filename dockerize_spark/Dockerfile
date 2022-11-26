@@ -1,13 +1,12 @@
-FROM debian
+FROM debian:testing
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ARG GID=
 ARG UID=
 
-RUN apt-get update -qq -y && apt-get install -y --no-install-recommends default-jdk openjdk-11-jdk gawk sed vim
-RUN apt-get install -y curl iproute2 net-tools iputils-ping
+RUN apt-get update -qq -y && apt-get install -y --no-install-recommends default-jdk curl procps iputils-ping
+## RUN apt-get install -y curl iproute2 net-tools iputils-ping
 ## echo $(dirname $(update-alternatives --list java))
-ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
 
 ARG USER=
 ARG GROUP=
@@ -18,12 +17,15 @@ RUN chown -R ${USER}:${GROUP} ${HOME}
 USER ${USER}
 RUN mkdir -p ${HOME}/code/spark 
 WORKDIR ${HOME}/code/spark
-RUN curl -SL -O https://dlcdn.apache.org/spark/spark-3.3.0/spark-3.3.0-bin-hadoop3-scala2.13.tgz && tar xf spark-3.3.0-bin-hadoop3-scala2.13.tgz && rm -rf spark-3.3.0-bin-hadoop3-scala2.13.tgz
+RUN curl -SL -O https://dlcdn.apache.org/spark/spark-3.3.1/spark-3.3.1-bin-hadoop3-scala2.13.tgz && tar xf spark-3.3.1-bin-hadoop3-scala2.13.tgz && rm -rf spark-3.3.1-bin-hadoop3-scala2.13.tgz
 RUN curl -SL -O https://dlcdn.apache.org/hadoop/common/hadoop-3.3.4/hadoop-3.3.4.tar.gz && tar xf hadoop-3.3.4.tar.gz && rm -rf hadoop-3.3.4.tar.gz
+
+ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
 ENV HADOOP_HOME="${HOME}/code/spark/hadoop-3.3.4"
-ENV SPARK_HOME="${HOME}/code/spark/spark-3.3.0-bin-hadoop3-scala2.13"
+ENV SPARK_HOME="${HOME}/code/spark/spark-3.3.1-bin-hadoop3-scala2.13"
 ENV PATH="${PATH:+${PATH}:}${HADOOP_HOME}/bin:${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${HADOOP_HOME}/lib/native"
+
 WORKDIR ${HOME}
 
 CMD ["bash"]
