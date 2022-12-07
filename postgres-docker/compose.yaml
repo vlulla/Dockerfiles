@@ -6,17 +6,10 @@ services:
     image: postgis/postgis:15-3.3
     restart: always
     hostname: docker-postgis
-    environment:
-      POSTGRES_PASSWORD: pgpass
-      POSTGRES_USER: postgres
-      TZ: utc
-    volumes:
-      - ./20-create-role.sql:/docker-entrypoint-initdb.d/20-create-role.sql
-    ports:
-      - "25432:5432"
-    networks:
-      - pgnet
-
+    environment: { "POSTGRES_PASSWORD": "pgpass", "POSTGRES_USER": "postgres", "TZ": "utc" }
+    volumes: [ "./20-create-role.sql:/docker-entrypoint-initdb.d/20-create-role.sql", "./30-pgstac.sql:/docker-entrypoint-initdb.d/30-pgstac.sql"]
+    ports: [ "25432:5432" ]
+    networks: [ "pgnet" ]
 networks:
   pgnet:
-   name: postgis-net
+    name: postgis-net
