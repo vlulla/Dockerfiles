@@ -39,3 +39,7 @@ $ psql -h localhost -p 25432 -U tst tst
 This alternative user is now created as a part of `docker-compose up` process. Modify the role creation sql file to your liking. Or, add more sql files as volumes into the yml compose definition file.
 
 Using `docker compose` is handy because it will automatically create/destroy the containers, networks, services that are needed to run the application together.
+
+---
+
+To use pgadmin run the `make up-with-pgadmin` command. Access the pgadmin interface on `localhost:8080` (modify to your liking in the yaml) and use the username password to connect to the pgadmin interface. In the interface add the postgres server. The connection details for the postgres database can be found in the yaml file. The only thing to note is that for the `Hostname/address` you'll have to use one of the aliases of the docker `db` container. The container name (`db`) will work too!! I prefer assigning, and using a, hostname to the `db` container. **NOTE**: Any of the aliases listed in `docker container inspect db | jq '.[0].NetworkSettings.Networks["postgis-net"].Aliases'` will do for server hostname/address field.

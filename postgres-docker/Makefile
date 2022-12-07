@@ -17,13 +17,23 @@ all: start
 up: compose.yaml
 > docker compose -f $< up
 
+up-with-pgadmin: compose-with-pgadmin.yaml
+> docker compose -f $< up
+
 start: compose.yaml
+> docker compose -f $< start
+start-with-pgadmin: compose-with-pgadmin.yaml
 > docker compose -f $< start
 
 stop: compose.yaml
 > docker compose -f $< stop
+stop-with-pgadmin: compose-with-pgadmin.yaml
+> docker compose -f $< stop
 
 down: compose.yaml
+> docker compose -f $< down
+
+down-with-pgadmin: compose-with-pgadmin.yaml
 > docker compose -f $< down
 
 clean:
