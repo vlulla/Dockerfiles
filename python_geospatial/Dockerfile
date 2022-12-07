@@ -3,7 +3,7 @@ FROM debian:testing
 
 ## Buid with command: docker build -t python_geospatial .
 ##
-## Run with command: docker run --rm -ti --init --hostname geospatialPython --name geospatialPython --net mynet python_geospatial
+## Run with command: docker run --rm -it --init --hostname=geospatialPython --name=geospatialPython --net=mynet --read-only python_geospatial
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

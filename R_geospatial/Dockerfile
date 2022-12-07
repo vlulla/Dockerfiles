@@ -3,7 +3,7 @@ FROM ubuntu:jammy
 
 ## Buid with command: docker build -t r_geospatial .
 ##
-## Run with command: docker run --rm -it --init --hostname R-geospatial --name geospatialR --net mynet r_geospatial
+## Run with command: docker run --rm -it --init --hostname=R-geospatial --name=geospatialR --net=mynet --read-only r_geospatial
 
 ## ENV DISPLAY :0
 ARG DEBIAN_FRONTEND=noninteractive
