@@ -3,4 +3,5 @@ tmp
 *.pdf
 *.bbl
 *.run.xml
+.hypothesis
 

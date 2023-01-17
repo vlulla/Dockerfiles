@@ -60,7 +60,7 @@ INSERT INTO pgstac_settings (name, value) VALUES
   ('context_estimated_count', '100000'),
   ('context_estimated_cost', '100000'),
   ('context_stats_ttl', '1 day'),
-  ('default-filter-lang', 'cql2-json'),
+  ('default_filter_lang', 'cql2-json'),
   ('additional_properties', 'true')
 ON CONFLICT DO NOTHING
 ;
@@ -136,6 +136,99 @@ SELECT ARRAY(
     ORDER BY i DESC
 );
 $$ LANGUAGE SQL STRICT IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS check_pgstac_settings;
+CREATE OR REPLACE FUNCTION check_pgstac_settings(_sysmem text DEFAULT NULL) RETURNS VOID AS $$
+DECLARE
+    settingval text;
+    sysmem bigint := pg_size_bytes(_sysmem);
+    effective_cache_size bigint := pg_size_bytes(current_setting('effective_cache_size', TRUE));
+    shared_buffers bigint := pg_size_bytes(current_setting('shared_buffers', TRUE));
+    work_mem bigint := pg_size_bytes(current_setting('work_mem', TRUE));
+    max_connections int := current_setting('max_connections', TRUE);
+    maintenance_work_mem bigint := pg_size_bytes(current_setting('maintenance_work_mem', TRUE));
+    seq_page_cost float := current_setting('seq_page_cost', TRUE);
+    random_page_cost float := current_setting('random_page_cost', TRUE);
+    temp_buffers bigint := pg_size_bytes(current_setting('temp_buffers', TRUE));
+    r record;
+BEGIN
+    IF _sysmem IS NULL THEN
+      RAISE NOTICE 'Call function with the size of your system memory `SELECT check_pgstac_settings(''4GB'')` to get pg system setting recommendations.';
+    ELSE
+        IF effective_cache_size < (sysmem * 0.5) THEN
+            RAISE WARNING 'effective_cache_size of % is set low for a system with %. Recomended value between % and %', pg_size_pretty(effective_cache_size), pg_size_pretty(sysmem), pg_size_pretty(sysmem * 0.5), pg_size_pretty(sysmem * 0.75);
+        ELSIF effective_cache_size > (sysmem * 0.75) THEN
+            RAISE WARNING 'effective_cache_size of % is set high for a system with %. Recomended value between % and %', pg_size_pretty(effective_cache_size), pg_size_pretty(sysmem), pg_size_pretty(sysmem * 0.5), pg_size_pretty(sysmem * 0.75);
+        ELSE
+            RAISE NOTICE 'effective_cache_size of % is set appropriately for a system with %', pg_size_pretty(effective_cache_size), pg_size_pretty(sysmem);
+        END IF;
+
+        IF shared_buffers < (sysmem * 0.2) THEN
+            RAISE WARNING 'shared_buffers of % is set low for a system with %. Recomended value between % and %', pg_size_pretty(shared_buffers), pg_size_pretty(sysmem), pg_size_pretty(sysmem * 0.2), pg_size_pretty(sysmem * 0.3);
+        ELSIF shared_buffers > (sysmem * 0.3) THEN
+            RAISE WARNING 'shared_buffers of % is set high for a system with %. Recomended value between % and %', pg_size_pretty(shared_buffers), pg_size_pretty(sysmem), pg_size_pretty(sysmem * 0.2), pg_size_pretty(sysmem * 0.3);
+        ELSE
+            RAISE NOTICE 'shared_buffers of % is set appropriately for a system with %', pg_size_pretty(shared_buffers), pg_size_pretty(sysmem);
+        END IF;
+        shared_buffers = sysmem * 0.3;
+        IF maintenance_work_mem < (sysmem * 0.2) THEN
+            RAISE WARNING 'maintenance_work_mem of % is set low for shared_buffers of %. Recomended value between % and %', pg_size_pretty(maintenance_work_mem), pg_size_pretty(shared_buffers), pg_size_pretty(shared_buffers * 0.2), pg_size_pretty(shared_buffers * 0.3);
+        ELSIF maintenance_work_mem > (shared_buffers * 0.3) THEN
+            RAISE WARNING 'maintenance_work_mem of % is set high for shared_buffers of %. Recomended value between % and %', pg_size_pretty(maintenance_work_mem), pg_size_pretty(shared_buffers), pg_size_pretty(shared_buffers * 0.2), pg_size_pretty(shared_buffers * 0.3);
+        ELSE
+            RAISE NOTICE 'maintenance_work_mem of % is set appropriately for shared_buffers of %', pg_size_pretty(shared_buffers), pg_size_pretty(shared_buffers);
+        END IF;
+
+        IF work_mem * max_connections > shared_buffers THEN
+            RAISE WARNING 'work_mem setting of % is set high for % max_connections please reduce work_mem to % or decrease max_connections to %', pg_size_pretty(work_mem), max_connections, pg_size_pretty(shared_buffers/max_connections), floor(shared_buffers/work_mem);
+        ELSIF work_mem * max_connections < (shared_buffers * 0.75) THEN
+            RAISE WARNING 'work_mem setting of % is set low for % max_connections you may consider raising work_mem to % or increasing max_connections to %', pg_size_pretty(work_mem), max_connections, pg_size_pretty(shared_buffers/max_connections), floor(shared_buffers/work_mem);
+        ELSE
+            RAISE NOTICE 'work_mem setting of % and max_connections of % are adequate for shared_buffers of %', pg_size_pretty(work_mem), max_connections, pg_size_pretty(shared_buffers);
+        END IF;
+
+        IF random_page_cost / seq_page_cost != 1.1 THEN
+            RAISE WARNING 'random_page_cost (%) /seq_page_cost (%) should be set to 1.1 for SSD. Change random_page_cost to %', random_page_cost, seq_page_cost, 1.1 * seq_page_cost;
+        ELSE
+            RAISE NOTICE 'random_page_cost and seq_page_cost set appropriately for SSD';
+        END IF;
+
+        IF temp_buffers < greatest(pg_size_bytes('128MB'),(maintenance_work_mem / 2)) THEN
+            RAISE WARNING 'pgstac makes heavy use of temp tables, consider raising temp_buffers from % to %', pg_size_pretty(temp_buffers), greatest('128MB', pg_size_pretty((shared_buffers / 16)));
+        END IF;
+    END IF;
+
+    RAISE NOTICE 'VALUES FOR PGSTAC VARIABLES';
+    RAISE NOTICE 'These can be set either as GUC system variables or by setting in the pgstac_settings table.';
+
+    FOR r IN SELECT name, get_setting(name) as setting, CASE WHEN current_setting(concat('pgstac.',name), TRUE) IS NOT NULL THEN concat('pgstac.',name, ' GUC') WHEN value IS NOT NULL THEN 'pgstac_settings table' ELSE 'Not Set' END as loc FROM pgstac_settings LOOP
+      RAISE NOTICE '% is set to % from the %', r.name, r.setting, r.loc;
+    END LOOP;
+
+    SELECT installed_version INTO settingval from pg_available_extensions WHERE name = 'pg_cron';
+    IF NOT FOUND OR settingval IS NULL THEN
+        RAISE NOTICE 'Consider intalling pg_cron which can be used to automate tasks';
+    ELSE
+        RAISE NOTICE 'pg_cron % is installed', settingval;
+    END IF;
+
+    SELECT installed_version INTO settingval from pg_available_extensions WHERE name = 'pgstattuple';
+    IF NOT FOUND OR settingval IS NULL THEN
+        RAISE NOTICE 'Consider installing the pgstattuple extension which can be used to help maintain tables and indexes.';
+    ELSE
+        RAISE NOTICE 'pgstattuple % is installed', settingval;
+    END IF;
+
+    SELECT installed_version INTO settingval from pg_available_extensions WHERE name = 'pg_stat_statements';
+    IF NOT FOUND OR settingval IS NULL THEN
+        RAISE NOTICE 'Consider installing the pg_stat_statements extension which is very helpful for tracking the types of queries on the system';
+    ELSE
+        RAISE NOTICE 'pgstattuple % is installed', settingval;
+    END IF;
+
+END;
+$$ LANGUAGE PLPGSQL SET SEARCH_PATH TO pgstac, public SET CLIENT_MIN_MESSAGES TO NOTICE;
 CREATE OR REPLACE FUNCTION to_int(jsonb) RETURNS int AS $$
     SELECT floor(($1->>0)::float)::int;
 $$ LANGUAGE SQL IMMUTABLE STRICT;
@@ -360,6 +453,52 @@ CREATE OR REPLACE FUNCTION strip_jsonb(_a jsonb, _b jsonb) RETURNS jsonb AS $$
     END
     ;
 $$ LANGUAGE SQL IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION nullif_jsonbnullempty(j jsonb) RETURNS jsonb AS $$
+    SELECT nullif(nullif(nullif(j,'null'::jsonb),'{}'::jsonb),'[]'::jsonb);
+$$ LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OR REPLACE FUNCTION jsonb_array_unique(j jsonb) RETURNS jsonb AS $$
+    SELECT nullif_jsonbnullempty(jsonb_agg(DISTINCT a)) v FROM jsonb_array_elements(j) a;
+$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION jsonb_concat_ignorenull(a jsonb, b jsonb) RETURNS jsonb AS $$
+    SELECT coalesce(a,'[]'::jsonb) || coalesce(b,'[]'::jsonb);
+$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION jsonb_least(a jsonb, b jsonb) RETURNS jsonb AS $$
+    SELECT nullif_jsonbnullempty(least(nullif_jsonbnullempty(a), nullif_jsonbnullempty(b)));
+$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION jsonb_greatest(a jsonb, b jsonb) RETURNS jsonb AS $$
+    SELECT nullif_jsonbnullempty(greatest(a, b));
+$$ LANGUAGE SQL IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION first_notnull_sfunc(anyelement, anyelement) RETURNS anyelement AS $$
+    SELECT COALESCE($1,$2);
+$$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
+
+CREATE OR REPLACE AGGREGATE first_notnull(anyelement)(
+    SFUNC = first_notnull_sfunc,
+    STYPE = anyelement
+);
+
+CREATE OR REPLACE AGGREGATE jsonb_array_unique_merge(jsonb) (
+    STYPE = jsonb,
+    SFUNC = jsonb_concat_ignorenull,
+    FINALFUNC = jsonb_array_unique
+);
+
+CREATE OR REPLACE AGGREGATE jsonb_min(jsonb) (
+    STYPE = jsonb,
+    SFUNC = jsonb_least
+);
+
+CREATE OR REPLACE AGGREGATE jsonb_max(jsonb) (
+    STYPE = jsonb,
+    SFUNC = jsonb_greatest
+);
 /* looks for a geometry in a stac item first from geometry and falling back to bbox */
 CREATE OR REPLACE FUNCTION stac_geom(value jsonb) RETURNS geometry AS $$
 SELECT
@@ -419,21 +558,10 @@ CREATE OR REPLACE FUNCTION stac_end_datetime(value jsonb) RETURNS timestamptz AS
     SELECT upper(stac_daterange(value));
 $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE SET TIMEZONE='UTC';
 
-
-CREATE TABLE IF NOT EXISTS stac_extensions(
-    name text PRIMARY KEY,
-    url text,
-    enbabled_by_default boolean NOT NULL DEFAULT TRUE,
-    enableable boolean NOT NULL DEFAULT TRUE
+CREATE TABLE stac_extensions(
+    url text PRIMARY KEY,
+    content jsonb
 );
-
-INSERT INTO stac_extensions (name, url) VALUES
-    ('fields', 'https://api.stacspec.org/v1.0.0-beta.5/item-search#fields'),
-    ('sort','https://api.stacspec.org/v1.0.0-beta.5/item-search#sort'),
-    ('context','https://api.stacspec.org/v1.0.0-beta.5/item-search#context'),
-    ('filter', 'https://api.stacspec.org/v1.0.0-beta.5/item-search#filter'),
-    ('query', 'https://api.stacspec.org/v1.0.0-beta.5/item-search#query')
-ON CONFLICT (name) DO UPDATE SET url=EXCLUDED.url;
 
 
 
@@ -932,7 +1060,7 @@ CREATE OR REPLACE FUNCTION all_collections() RETURNS jsonb AS $$
 $$ LANGUAGE SQL SET SEARCH_PATH TO pgstac, public;
 CREATE TABLE queryables (
     id bigint GENERATED ALWAYS AS identity PRIMARY KEY,
-    name text UNIQUE NOT NULL,
+    name text NOT NULL,
     collection_ids text[], -- used to determine what partitions to create indexes on
     definition jsonb,
     property_path text,
@@ -1064,7 +1192,9 @@ FOR EACH STATEMENT EXECUTE PROCEDURE queryables_trigger_func();
 CREATE TRIGGER queryables_collection_trigger AFTER INSERT OR UPDATE ON collections
 FOR EACH STATEMENT EXECUTE PROCEDURE queryables_trigger_func();
 
+
 CREATE OR REPLACE FUNCTION get_queryables(_collection_ids text[] DEFAULT NULL) RETURNS jsonb AS $$
+DECLARE
 BEGIN
     -- Build up queryables if the input contains valid collection ids or is empty
     IF EXISTS (
@@ -1076,29 +1206,52 @@ BEGIN
     )
     THEN
         RETURN (
+            WITH base AS (
+                SELECT
+                    unnest(collection_ids) as collection_id,
+                    name,
+                    coalesce(definition, '{"type":"string"}'::jsonb) as definition
+                FROM queryables
+                WHERE
+                    _collection_ids IS NULL OR
+                    _collection_ids = '{}'::text[] OR
+                    _collection_ids && collection_ids
+                UNION ALL
+                SELECT null, name, coalesce(definition, '{"type":"string"}'::jsonb) as definition
+                FROM queryables WHERE collection_ids IS NULL OR collection_ids = '{}'::text[]
+            ), g AS (
+                SELECT
+                    name,
+                    first_notnull(definition) as definition,
+                    jsonb_array_unique_merge(definition->'enum') as enum,
+                    jsonb_min(definition->'minimum') as minimum,
+                    jsonb_min(definition->'maxiumn') as maximum
+                FROM base
+                GROUP BY 1
+            )
             SELECT
                 jsonb_build_object(
                     '$schema', 'http://json-schema.org/draft-07/schema#',
-                    '$id', 'https://example.org/queryables',
+                    '$id', '',
                     'type', 'object',
                     'title', 'STAC Queryables.',
                     'properties', jsonb_object_agg(
                         name,
                         definition
+                        ||
+                        jsonb_strip_nulls(jsonb_build_object(
+                            'enum', enum,
+                            'minimum', minimum,
+                            'maximum', maximum
+                        ))
                     )
                 )
-                FROM queryables
-                WHERE
-                    _collection_ids IS NULL OR
-                    cardinality(_collection_ids) = 0 OR
-                    collection_ids IS NULL OR
-                    _collection_ids && collection_ids
+                FROM g
         );
     ELSE
         RETURN NULL;
     END IF;
 END;
-
 $$ LANGUAGE PLPGSQL STABLE;
 
 CREATE OR REPLACE FUNCTION get_queryables(_collection text DEFAULT NULL) RETURNS jsonb AS $$
@@ -1110,23 +1263,38 @@ CREATE OR REPLACE FUNCTION get_queryables(_collection text DEFAULT NULL) RETURNS
     ;
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION get_queryables() RETURNS jsonb AS $$
+    SELECT get_queryables(NULL::text[]);
+$$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION missing_queryables(_collection text, _tablesample int DEFAULT 5) RETURNS TABLE(collection text, name text, definition jsonb, property_wrapper text) AS $$
+CREATE OR REPLACE FUNCTION schema_qualify_refs(url text, j jsonb) returns jsonb as $$
+    SELECT regexp_replace(j::text, '"\$ref": "#', concat('"$ref": "', url, '#'), 'g')::jsonb;
+$$ LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+
+
+CREATE OR REPLACE VIEW stac_extension_queryables AS
+SELECT DISTINCT key as name, schema_qualify_refs(e.url, j.value) as definition FROM stac_extensions e, jsonb_each(e.content->'definitions'->'fields'->'properties') j;
+
+
+CREATE OR REPLACE FUNCTION missing_queryables(_collection text, _tablesample float DEFAULT 5, minrows float DEFAULT 10) RETURNS TABLE(collection text, name text, definition jsonb, property_wrapper text) AS $$
 DECLARE
     q text;
     _partition text;
     explain_json json;
-    psize bigint;
+    psize float;
+    estrows float;
 BEGIN
     SELECT format('_items_%s', key) INTO _partition FROM collections WHERE id=_collection;
 
     EXECUTE format('EXPLAIN (format json) SELECT 1 FROM %I;', _partition)
     INTO explain_json;
     psize := explain_json->0->'Plan'->'Plan Rows';
-    IF _tablesample * .01 * psize < 10 THEN
-        _tablesample := 100;
+    estrows := _tablesample * .01 * psize;
+    IF estrows < minrows THEN
+        _tablesample := least(100,greatest(_tablesample, (estrows / psize) / 100));
+        RAISE NOTICE '%', (psize / estrows) / 100;
     END IF;
-    RAISE NOTICE 'Using tablesample % to find missing queryables from % % that has ~% rows', _tablesample, _collection, _partition, psize;
+    RAISE NOTICE 'Using tablesample % to find missing queryables from % % that has ~% rows estrows: %', _tablesample, _collection, _partition, psize, estrows;
 
     q := format(
         $q$
@@ -1144,19 +1312,22 @@ BEGIN
             ), p AS (
                 SELECT DISTINCT ON (key)
                     key,
-                    value
+                    value,
+                    s.definition
                 FROM t
                 JOIN LATERAL jsonb_each(properties) ON TRUE
                 LEFT JOIN q ON (q.name=key)
+                LEFT JOIN stac_extension_queryables s ON (s.name=key)
                 WHERE q.definition IS NULL
             )
             SELECT
                 %L,
                 key,
-                jsonb_build_object('type',jsonb_typeof(value)) as definition,
-                CASE jsonb_typeof(value)
-                    WHEN 'number' THEN 'to_float'
-                    WHEN 'array' THEN 'to_text_array'
+                COALESCE(definition, jsonb_build_object('type',jsonb_typeof(value))) as definition,
+                CASE
+                    WHEN definition->>'type' = 'integer' THEN 'to_int'
+                    WHEN COALESCE(definition->>'type', jsonb_typeof(value)) = 'number' THEN 'to_float'
+                    WHEN COALESCE(definition->>'type', jsonb_typeof(value)) = 'array' THEN 'to_text_array'
                     ELSE 'to_text'
                 END
             FROM p;
@@ -1170,7 +1341,7 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;
 
-CREATE OR REPLACE FUNCTION missing_queryables(_tablesample int DEFAULT 5) RETURNS TABLE(collection_ids text[], name text, definition jsonb, property_wrapper text) AS $$
+CREATE OR REPLACE FUNCTION missing_queryables(_tablesample float DEFAULT 5) RETURNS TABLE(collection_ids text[], name text, definition jsonb, property_wrapper text) AS $$
     SELECT
         array_agg(collection),
         name,
@@ -1903,8 +2074,7 @@ BEGIN
         INSERT INTO items
         SELECT s.* FROM
             staging_formatted s
-            JOIN deletes d
-            USING (id, collection);
+            ON CONFLICT DO NOTHING;
         DELETE FROM items_staging_upsert;
     END IF;
     RAISE NOTICE 'Done. %', clock_timestamp() - ts;
@@ -2007,6 +2177,52 @@ UPDATE collections SET
     )
 ;
 $$ LANGUAGE SQL;
+
+
+CREATE OR REPLACE PROCEDURE analyze_items() AS $$
+DECLARE
+q text;
+BEGIN
+FOR q IN
+    SELECT format('ANALYZE (VERBOSE, SKIP_LOCKED) %I;', relname)
+    FROM pg_stat_user_tables
+    WHERE relname like '_item%' AND (n_mod_since_analyze>0 OR last_analyze IS NULL)
+LOOP
+        RAISE NOTICE '%', q;
+        EXECUTE q;
+        COMMIT;
+END LOOP;
+END;
+$$ LANGUAGE PLPGSQL;
+
+
+CREATE OR REPLACE PROCEDURE validate_constraints() AS $$
+DECLARE
+    q text;
+BEGIN
+    FOR q IN
+    SELECT
+        FORMAT(
+            'ALTER TABLE %I.%I VALIDATE CONSTRAINT %I;',
+            nsp.nspname,
+            cls.relname,
+            con.conname
+        )
+
+    FROM pg_constraint AS con
+        JOIN pg_class AS cls
+        ON con.conrelid = cls.oid
+        JOIN pg_namespace AS nsp
+        ON cls.relnamespace = nsp.oid
+    WHERE convalidated = FALSE AND contype in ('c','f')
+    AND nsp.nspname = 'pgstac'
+    LOOP
+        RAISE NOTICE '%', q;
+        EXECUTE q;
+        COMMIT;
+    END LOOP;
+END;
+$$ LANGUAGE PLPGSQL;
 CREATE VIEW partition_steps AS
 SELECT
     name,
@@ -2185,7 +2401,7 @@ BEGIN
 
     filterlang := COALESCE(
         j->>'filter-lang',
-        get_setting('default-filter-lang', j->'conf')
+        get_setting('default_filter_lang', j->'conf')
     );
     IF NOT filter @? '$.**.op' THEN
         filterlang := 'cql-json';
@@ -2280,6 +2496,21 @@ CREATE OR REPLACE FUNCTION get_sort_dir(sort_item jsonb) RETURNS text AS $$
     SELECT CASE WHEN sort_item->>'direction' ILIKE 'desc%' THEN 'DESC' ELSE 'ASC' END;
 $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE;
 
+CREATE OR REPLACE FUNCTION  get_token_val_str(
+    _field text,
+    _item items
+) RETURNS text AS $$
+DECLARE
+literal text;
+BEGIN
+RAISE NOTICE '% %', _field, _item;
+CREATE TEMP TABLE _token_item ON COMMIT DROP AS SELECT (_item).*;
+EXECUTE format($q$ SELECT quote_literal(%s) FROM _token_item $q$, _field) INTO literal;
+DROP TABLE IF EXISTS _token_item;
+RETURN literal;
+END;
+$$ LANGUAGE PLPGSQL;
+
 
 CREATE OR REPLACE FUNCTION get_token_filter(_search jsonb = '{}'::jsonb, token_rec jsonb DEFAULT NULL) RETURNS text AS $$
 DECLARE
@@ -2293,6 +2524,7 @@ DECLARE
     andfilters text[] := '{}'::text[];
     output text;
     token_where text;
+    token_item items%ROWTYPE;
 BEGIN
     RAISE NOTICE 'Getting Token Filter. % %', _search, token_rec;
     -- If no token provided return NULL
@@ -2312,6 +2544,12 @@ BEGIN
         FROM items WHERE id=token_id;
     END IF;
     RAISE NOTICE 'TOKEN ID: % %', token_rec, token_rec->'id';
+
+
+    RAISE NOTICE 'TOKEN ID: % %', token_rec, token_rec->'id';
+    token_item := jsonb_populate_record(null::items, token_rec);
+    RAISE NOTICE 'TOKEN ITEM ----- %', token_item;
+
 
     CREATE TEMP TABLE sorts (
         _row int GENERATED ALWAYS AS IDENTITY NOT NULL,
@@ -2340,46 +2578,50 @@ BEGIN
     END IF;
 
     -- Add value from looked up item to the sorts table
-    UPDATE sorts SET _val=quote_literal(token_rec->>_field);
+    UPDATE sorts SET _val=get_token_val_str(_field, token_item);
 
     -- Check if all sorts are the same direction and use row comparison
     -- to filter
     RAISE NOTICE 'sorts 2: %', (SELECT jsonb_agg(to_json(sorts)) FROM sorts);
 
-    IF (SELECT count(DISTINCT _dir) FROM sorts) = 1 THEN
-        SELECT format(
-                '(%s) %s (%s)',
-                concat_ws(', ', VARIADIC array_agg(quote_ident(_field))),
-                CASE WHEN (prev AND dir = 'ASC') OR (NOT prev AND dir = 'DESC') THEN '<' ELSE '>' END,
-                concat_ws(', ', VARIADIC array_agg(_val))
-        ) INTO output FROM sorts
-        WHERE token_rec ? _field
-        ;
-    ELSE
         FOR sort IN SELECT * FROM sorts ORDER BY _row asc LOOP
             RAISE NOTICE 'SORT: %', sort;
             IF sort._row = 1 THEN
-                orfilters := orfilters || format('(%s %s %s)',
-                    quote_ident(sort._field),
-                    CASE WHEN (prev AND sort._dir = 'ASC') OR (NOT prev AND sort._dir = 'DESC') THEN '<' ELSE '>' END,
-                    sort._val
+                IF sort._val IS NULL THEN
+                    orfilters := orfilters || format('(%s IS NOT NULL)', sort._field);
+                ELSE
+                    orfilters := orfilters || format('(%s %s %s)',
+                        sort._field,
+                        CASE WHEN (prev AND sort._dir = 'ASC') OR (NOT prev AND sort._dir = 'DESC') THEN '<' ELSE '>' END,
+                        sort._val
+                    );
+                END IF;
+            ELSE
+                IF sort._val IS NULL THEN
+                    orfilters := orfilters || format('(%s AND %s IS NOT NULL)',
+                    array_to_string(andfilters, ' AND '), sort._field);
+                ELSE
+                    orfilters := orfilters || format('(%s AND %s %s %s)',
+                        array_to_string(andfilters, ' AND '),
+                        sort._field,
+                        CASE WHEN (prev AND sort._dir = 'ASC') OR (NOT prev AND sort._dir = 'DESC') THEN '<' ELSE '>' END,
+                        sort._val
+                    );
+                END IF;
+            END IF;
+            IF sort._val IS NULL THEN
+                andfilters := andfilters || format('%s IS NULL',
+                    sort._field
                 );
             ELSE
-                orfilters := orfilters || format('(%s AND %s %s %s)',
-                    array_to_string(andfilters, ' AND '),
-                    quote_ident(sort._field),
-                    CASE WHEN (prev AND sort._dir = 'ASC') OR (NOT prev AND sort._dir = 'DESC') THEN '<' ELSE '>' END,
+                andfilters := andfilters || format('%s = %s',
+                    sort._field,
                     sort._val
                 );
-
             END IF;
-            andfilters := andfilters || format('%s = %s',
-                quote_ident(sort._field),
-                sort._val
-            );
         END LOOP;
         output := array_to_string(orfilters, ' OR ');
-    END IF;
+
     DROP TABLE IF EXISTS sorts;
     token_where := concat('(',coalesce(output,'true'),')');
     IF trim(token_where) = '' THEN
@@ -2988,4 +3230,4 @@ GRANT EXECUTE ON FUNCTION get_item TO pgstac_read;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA pgstac to pgstac_ingest;
 GRANT ALL ON ALL TABLES IN SCHEMA pgstac to pgstac_ingest;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA pgstac to pgstac_ingest;
-SELECT set_version('0.6.10');
+SELECT set_version('0.6.12');
