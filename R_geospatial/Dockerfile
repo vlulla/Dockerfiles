@@ -33,8 +33,8 @@ RUN <<EOT
   installBioc.r graph EBImage
   install2.r --error --skipinstalled jsonlite stringi stringr data.table sqldf igraph simstudy ggrepel pbapply \
           caret e1071 gbm glmnet nnet xgboost randomForest arrow classInt fst RSQLite rgdal sf sp raster terra lidR
-
   install2.r --error --skipinstalled rgeos
+  install2.r --error --skipinstalled svglite tmap
   install2.r --error --deps TRUE --skipinstalled --repos "http://packages.ropensci.org" rnaturalearth rnaturalearthdata rnaturalearthhires
 EOT
 
