@@ -12,7 +12,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ## ## ENV DISPLAY :0
 RUN <<EOT bash
   apt-get update -qq --yes
-  apt-get install --yes --no-install-recommends build-essential apt-utils libgeos-dev libxml2 libxml2-dev pkg-config \
+  apt-get install --yes --no-install-recommends build-essential apt-utils tini libgeos-dev libxml2 libxml2-dev pkg-config \
             curl wget jq parallel python3 ca-certificates
   rm -rf /var/lib/apt/lists/*
 EOT
@@ -31,10 +31,11 @@ WORKDIR ${HOME}
 USER ${PYUSR}
 
 RUN <<EOT
-    wget --quiet https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh
-    bash ./Mambaforge-$(uname)-$(uname -m).sh -b -p ~/mambaforge && rm -rf ~/Mambaforge-$(uname)-$(uname -m).sh
+    wget --quiet "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+    bash "./Mambaforge-$(uname)-$(uname -m).sh" -b -p ~/mambaforge && rm -rf "~/Mambaforge-$(uname)-$(uname -m).sh"
     ~/mambaforge/bin/mamba init bash
     ~/mambaforge/bin/mamba install --name base --yes geopandas xarray rasterio dask distributed pyarrow pygeos
 EOT
 
+ENTRYPOINT ["tini","--"]
 CMD ["bash"]
