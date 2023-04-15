@@ -1,6 +1,8 @@
 FROM debian:testing
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 ARG GID=
 ARG UID=
 

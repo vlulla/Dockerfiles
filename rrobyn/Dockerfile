@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 FROM ubuntu:22.04
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 ## see https://github.com/conda-forge/miniforge-images/blob/master/ubuntu/Dockerfile
 ARG VERSION=latest
 ARG MINIFORGE_NAME=Miniforge3
