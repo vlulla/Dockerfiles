@@ -4,4 +4,4 @@ tmp
 *.bbl
 *.run.xml
 .hypothesis
-
+.DS_Store
