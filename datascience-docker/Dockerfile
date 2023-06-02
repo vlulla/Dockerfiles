@@ -11,15 +11,17 @@ RUN <<EOT
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq --yes
 
-apt-get install --yes -qq --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils git tree jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps
-apt-get install --yes -qq zsh 
+apt-get install --yes -qq --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils \
+   git  jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps zsh parallel lua5.4 graphviz
+
+pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pushd tree && make && make install && popd && popd && rm -rf tree
 
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
 unset DEBIAN_FRONTEND
 EOT
 
-ARG USR=usr
-ARG GRP=grp
+ARG USR=${USR:-usr}
+ARG GRP=${GRP:-grp}
 
 ## ## See the rules that ADD obeys at https://docs.docker.com/engine/reference/builder/#add
 ## ## <src> path must be **inside of the context** of the build! And, that is why I cannot do ADD --chown=${USR}:${GRP} /home/vijay /home/usr !
@@ -38,14 +40,8 @@ RUN <<EOT
 mkdir -p code 
 cd code && git clone https://github.com/vlulla/config.git
 
-> /home/${USR}/.zshrc cat <<EOF
-[[ -f "/home/${USR}/code/config/zshrc" ]] && source "/home/${USR}/code/config/zshrc"
-EOF
-
-> /home/${USR}/.vimrc cat <<EOF
-source /home/${USR}/code/config/vimrc
-EOF
-
+printf '[[ -f "/home/%s/code/config/zshrc" ]] && source "/home/%s/code/config/zshrc"\n' ${USR:-usr} ${USR:-usr} > /home/${USR:-usr}/.zshrc
+printf 'source /home/%s/code/config/vimrc\n' "${USR:-usr}" > /home/${USR:-usr}/.vimrc
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
