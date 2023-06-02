@@ -1,0 +1,7 @@
+.git
+.cache
+**/*.class
+.dockerignore
+Dockerfile
+Makefile
+
