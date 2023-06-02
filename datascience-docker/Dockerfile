@@ -52,6 +52,7 @@ cd code && git clone https://github.com/vlulla/config.git
 
 printf '[[ -f "/home/%s/code/config/zshrc" ]] && source "/home/%s/code/config/zshrc"\n' ${USR:-usr} ${USR:-usr} > /home/${USR:-usr}/.zshrc
 printf 'source /home/%s/code/config/vimrc\n' "${USR:-usr}" > /home/${USR:-usr}/.vimrc
+ln -s /home/${USR:-usr}/code/config/Rprofile /home/${USR:-usr}/.Rprofile
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
