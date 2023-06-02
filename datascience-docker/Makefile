@@ -13,11 +13,10 @@ MAKEFLAGS += --no-builtin-rules
 IMGTAG=vl-ds
 
 all: Dockerfile
-# > sed -E -e "s/^ARG USR=usr$$/&$$(id -u)/g;s/^ARG GRP=grp$$/&$$(id -g)/g" $< | docker buildx build -t vl-ds -f - .
 > cat $< | docker buildx build $(if $(I),--no-cache,) --platform linux/amd64 --progress=plain --build-arg USR=$$(id -un) --build-arg GRP=$$(id -gn) --build-arg VERSION=bookworm --tag ${IMGTAG} -
 
 run: Dockerfile
-> docker run -ti --rm --name tst --entrypoint zsh ${IMGTAG}
+> docker run --tty --interactive --rm --hostname=ds-container --name tst --volume="$$(pwd):/app:ro" --workdir /app ${IMGTAG}
 
 clean:
 > docker rmi ${IMGTAG}
