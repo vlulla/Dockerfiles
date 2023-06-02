@@ -13,13 +13,13 @@ apt-get update -qq --yes
 
 apt-get install --yes -qq --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils \
    git  jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps zsh parallel lua5.4 graphviz \
-   sed gawk sqlite3 unzip zstd
+   sed gawk sqlite3 unzip zstd apt-utils
 
 gpg --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'
 gpg --armor --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' | tee /etc/apt/trusted.gpg.d/cran_debian_key.asc
 printf 'deb http://cloud.r-project.org/bin/linux/debian bookworm-cran40/' > /etc/apt/sources.list.d/R.list
 apt-get update -qq --yes
-apt-get install --yes -qq --auto-remove --no-install-recommends r-base r-base-dev libopenblas-base
+apt-get install --yes -qq --auto-remove r-base r-base-dev gfortran libatlas3-base
 
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
 unset DEBIAN_FRONTEND
