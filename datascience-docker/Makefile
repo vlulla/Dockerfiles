@@ -14,7 +14,7 @@ IMGTAG=vl-ds
 
 all: Dockerfile
 # > sed -E -e "s/^ARG USR=usr$$/&$$(id -u)/g;s/^ARG GRP=grp$$/&$$(id -g)/g" $< | docker buildx build -t vl-ds -f - .
-> cat $< | docker buildx build $(if $(I),--no-cache,) --build-arg USR=$$(id -un) --build-arg GRP=$$(id -gn) --build-arg VERSION=sid --tag ${IMGTAG} -
+> cat $< | docker buildx build $(if $(I),--no-cache,) --progress=plain --build-arg USR=$$(id -un) --build-arg GRP=$$(id -gn) --build-arg VERSION=bookworm --tag ${IMGTAG} -
 
 run: Dockerfile
 > docker run -ti --rm --name tst --entrypoint zsh ${IMGTAG}
