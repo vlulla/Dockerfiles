@@ -40,13 +40,16 @@ EOT
 
 
 ## Add a regular user
-ARG UID=1001
-ARG GID=1001
-ARG RUSER=r
-ARG RGROUP=r
+ARG UID=${UID:-1010}
+ARG GID=${GID:-1010}
+ARG RUSER=${RUSER:-r}
+ARG RGROUP=${RGROUP:-r}
 ARG HOME=/home/${RUSER}
-RUN groupadd -g ${GID} ${RGROUP} && useradd -l -m -u ${UID} -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
-RUN chown -R ${RUSER}:${RGROUP} ${HOME}
+
+RUN <<EOT
+groupadd -g ${GID} ${RGROUP} && useradd -l -m -u ${UID} -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
+chown -R ${RUSER}:${RGROUP} ${HOME}
+EOT
 
 WORKDIR ${HOME}
 USER ${RUSER}:${RGROUP}

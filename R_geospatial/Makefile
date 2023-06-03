@@ -1,25 +1,27 @@
-.PHONY: all clean docker2singularity cleanall
+SHELL := bash
+.ONESHELL:
+.SHELLFLAGS := -eu -o pipefail -c
+.DELETE_ON_ERROR:
+.RECIPEPREFIX = >
+
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
+
+IMGTAG=r_geospatial
+
+.PHONY: all clean cleanall
 .DEFAULT: all
 
+## See https://stackoverflow.com/a/65854404 to understand the new builder context we have to create for larger log recording!
+## bash $ docker buildx ls # to see the various builder contexts...
+
 all: Dockerfile
-	sed -e "s/^ARG UID=$$/&$$(id -u)/g;s/^ARG GID=$$/&$$(id -g)/g" $< | docker buildx build -t r_geospatial -f - .
-
-Dockerfile.singularity: Dockerfile
-	sed -e '/RUN groupadd/d' -e '/USER r/d' $< > $@
-
-docker2singularity: Dockerfile.singularity
-	docker build -t r_geospatial_for_singularity -f $< .
-
-singularityimg: docker2singularity
-	docker run -v /var/run/docker.sock:/var/run/docker.sock -v $(PWD):/output --privileged -t --rm singularityware/docker2singularity r_geospatial_for_singularity
-
+# > sed -e "s/^ARG UID=$$/&$$(id -u)/g;s/^ARG GID=$$/&$$(id -g)/g" $< | docker buildx build -t r_geospatial -f - .
+## > docker buildx create --use --name larger-log --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=$$((15*1024*1024))
+> docker buildx build  --progress=plain $(if $(NC),--no-cache,) --build-arg UID=$$(id -u) --build-arg GID=$$(id -g) --build-arg RUSER=$$(id -un) --build-arg RGROUP=$$(id -gn) --tag $(IMGTAG) -f $< .
 
 clean:
-	@echo "Do cleaning here"
-	rm -rf Dockerfile.singularity
+> docker rmi $(IMGTAG)
 
 cleanall: clean
-	docker rmi r_geospatial r_geospatial_for_singularity rocker/r-base
-
-
-
+> @echo "Do more thorough cleaning here"
