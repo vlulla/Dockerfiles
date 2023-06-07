@@ -30,7 +30,9 @@ pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pu
 pushd /tmp && curl -sSLO https://github.com/duckdb/duckdb/releases/download/v0.8.0/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
 EOT
 
+ARG UID=${UID:-1000}
 ARG USR=${USR:-usr}
+ARG GID=${GID:-1000}
 ARG GRP=${GRP:-grp}
 
 ## ## See the rules that ADD obeys at https://docs.docker.com/engine/reference/builder/#add
@@ -39,8 +41,8 @@ ARG GRP=${GRP:-grp}
 ## ADD --chown=${USR}:${GRP} . /home/usr
 
 RUN <<EOT
-addgroup ${GRP}
-adduser --shell /usr/bin/zsh --ingroup ${GRP} ${USR}
+addgroup --gid ${GID} ${GRP}
+adduser --shell /usr/bin/zsh --uid ${UID} --ingroup ${GRP} ${USR}
 EOT
 
 WORKDIR /home/${USR}
