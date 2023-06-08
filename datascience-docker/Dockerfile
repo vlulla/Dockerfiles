@@ -13,7 +13,7 @@ apt-get update -qq --yes
 
 apt-get install --yes -qq --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils \
    git  jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps zsh parallel lua5.4 graphviz \
-   sed gawk sqlite3 unzip zstd apt-utils
+   sed gawk sqlite3 unzip zstd apt-utils less libcurl4-openssl-dev libxml2-dev libnode-dev libuv1-dev
 
 gpg --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'
 gpg --armor --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' | tee /etc/apt/trusted.gpg.d/cran_debian_key.asc
@@ -58,6 +58,18 @@ ln -s /home/${USR:-usr}/code/config/Rprofile /home/${USR:-usr}/.Rprofile
 ln -s /home/${USR:-usr}/code/config/sqliterc /home/${USR:-usr}/.sqliterc
 ln -s /home/${USR:-usr}/code/config/duckdbrc /home/${USR:-usr}/.duckdbrc
 ln -s /home/${USR:-usr}/code/config/psqlrc /home/${USR:-usr}/.psqlrc
+Rscript -e "dir.create(Sys.getenv('R_LIBS_USER'),recursive=TRUE)"
+
+## ## The below is needed because fs package in R will not compile otherwise
+## printf 'unset QUOTING_STYLE' >> /home/${USR:-usr}/.zshrc
+( cat <<EOF
+echo "#######################################################################################"
+echo "# If installing packages in R raises lots of errors with ls -t then run it like this: #"
+echo "#                                                                                     #"
+echo "# zsh $ ( unset QUOTING_STYLE && R )                                                  #"
+echo "#######################################################################################"
+EOF
+) >> /home/${USR:-usr}/.zshrc
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
