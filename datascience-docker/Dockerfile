@@ -63,11 +63,16 @@ Rscript -e "dir.create(Sys.getenv('R_LIBS_USER'),recursive=TRUE)"
 ## ## The below is needed because fs package in R will not compile otherwise
 ## printf 'unset QUOTING_STYLE' >> /home/${USR:-usr}/.zshrc
 ( cat <<EOF
-echo "#######################################################################################"
-echo "# If installing packages in R raises lots of errors with ls -t then run it like this: #"
-echo "#                                                                                     #"
-echo "# zsh $ ( unset QUOTING_STYLE && R )                                                  #"
-echo "#######################################################################################"
+msg() {
+echo '
+#######################################################################################
+# If installing packages in R raises lots of errors with ls -t then run it like this: #
+#                                                                                     #
+# zsh $ ( unset QUOTING_STYLE && R )                                                  #
+#######################################################################################
+'
+}
+msg
 EOF
 ) >> /home/${USR:-usr}/.zshrc
 EOT
