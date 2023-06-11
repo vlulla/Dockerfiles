@@ -13,7 +13,7 @@ apt-get update -qq --yes
 
 apt-get install --yes -qq --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils \
    git  jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps zsh parallel lua5.4 graphviz \
-   sed gawk sqlite3 unzip zstd apt-utils less libcurl4-openssl-dev libxml2-dev libnode-dev libuv1-dev
+   sed gawk sqlite3 unzip zstd apt-utils less libcurl4-openssl-dev libxml2-dev libnode-dev libuv1-dev default-jdk rlwrap
 
 gpg --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'
 gpg --armor --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' > /etc/apt/trusted.gpg.d/cran_debian_key.asc
@@ -53,8 +53,8 @@ addgroup --gid ${GID} ${GRP}
 adduser --shell /usr/bin/zsh --uid ${UID} --ingroup ${GRP} ${USR}
 EOT
 
-WORKDIR /home/${USR}
-USER ${USR}
+WORKDIR /home/${USR:-usr}
+USER ${USR:-usr}
 
 RUN <<EOT
 mkdir -p code 
@@ -74,7 +74,7 @@ Rscript -e "dir.create(Sys.getenv('R_LIBS_USER'),recursive=TRUE)"
 msg() {
 echo '
 #######################################################################################
-# If installing packages in R raises lots of errors with ls -t then run it like this: #
+# If installing packages in R raises lots of errors with ls -t then run R like this:  #
 #                                                                                     #
 # zsh $ ( unset QUOTING_STYLE && R )                                                  #
 #######################################################################################
@@ -83,6 +83,16 @@ echo '
 msg
 EOF
 ) >> /home/${USR:-usr}/.zshrc
+mkdir -p /home/${USR:-usr}/.local
+curl -O -sSf https://download.clojure.org/install/linux-install-1.11.1.1347.sh && bash ./linux-install-1.11.1.1347.sh -p /home/${USR:-usr}/.local && rm -rf linux-install-1.11.1.1347.sh
+EOT
+
+RUN <<EOT
+pushd /home/${USR:-usr}/.local
+curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
+mkdir -p /home/${USR:-usr}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR:-usr}/micromamba
+source /home/${USR:-usr}/.zshrc
+micromamba install --channel conda-forge --name base --yes ipython numpy pandas scikit-learn polars
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
