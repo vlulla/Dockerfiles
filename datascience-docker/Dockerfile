@@ -91,8 +91,7 @@ RUN <<EOT
 pushd /home/${USR:-usr}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 mkdir -p /home/${USR:-usr}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR:-usr}/micromamba
-source /home/${USR:-usr}/.zshrc
-micromamba install --channel conda-forge --name base --yes ipython numpy pandas scikit-learn polars
+MAMBA_ROOT_PREFIX=/home/${USR:-usr}/micromamba /home/${USR:-usr}/.local/bin/micromamba install --channel conda-forge --name base --yes ipython numpy pandas scikit-learn polars hypothesis pytest
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
