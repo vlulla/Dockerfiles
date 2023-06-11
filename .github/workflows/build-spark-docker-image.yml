@@ -1,4 +1,4 @@
-name: build-spark-docker-image
+name: spark
 on:
   push:
     branches:

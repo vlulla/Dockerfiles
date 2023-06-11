@@ -1,4 +1,4 @@
-name: build-geospatial-python-docker-image
+name: geospatial-python
 on: 
   push:
     branhces:

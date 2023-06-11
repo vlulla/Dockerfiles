@@ -1,5 +1,4 @@
-
-name: build-geospatial-R-docker-image
+name: geospatial-R
 on: 
   push:
     branches:

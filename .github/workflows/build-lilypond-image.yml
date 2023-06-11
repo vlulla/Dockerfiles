@@ -1,4 +1,4 @@
-name: build-lilypond-image
+name: lilypond
 on:
   push:
     branches:

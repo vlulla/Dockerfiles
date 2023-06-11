@@ -1,4 +1,4 @@
-name: build-spatialite
+name: spatialite
 on:
   push:
     branches:

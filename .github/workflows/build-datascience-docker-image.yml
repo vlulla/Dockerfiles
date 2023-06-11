@@ -1,4 +1,4 @@
-name: build-datascience-docker-image
+name: datascience
 on: 
   push: { "branches": [ "main" ], "paths": [ "datascience-docker/**" ] }
 jobs:
