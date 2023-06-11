@@ -53,23 +53,23 @@ addgroup --gid ${GID} ${GRP}
 adduser --shell /usr/bin/zsh --uid ${UID} --ingroup ${GRP} ${USR}
 EOT
 
-WORKDIR /home/${USR:-usr}
-USER ${USR:-usr}
+WORKDIR /home/${USR}
+USER ${USR}
 
 RUN <<EOT
 mkdir -p code 
 cd code && git clone https://github.com/vlulla/config.git
 
-printf '[[ -f "/home/%s/code/config/zshrc" ]] && source "/home/%s/code/config/zshrc"\n' ${USR:-usr} ${USR:-usr} > /home/${USR:-usr}/.zshrc
-printf 'source /home/%s/code/config/vimrc\n' "${USR:-usr}" > /home/${USR:-usr}/.vimrc
-ln -s /home/${USR:-usr}/code/config/Rprofile /home/${USR:-usr}/.Rprofile
-ln -s /home/${USR:-usr}/code/config/sqliterc /home/${USR:-usr}/.sqliterc
-ln -s /home/${USR:-usr}/code/config/duckdbrc /home/${USR:-usr}/.duckdbrc
-ln -s /home/${USR:-usr}/code/config/psqlrc /home/${USR:-usr}/.psqlrc
+printf '[[ -f "/home/%s/code/config/zshrc" ]] && source "/home/%s/code/config/zshrc"\n' ${USR} ${USR} > /home/${USR}/.zshrc
+printf 'source /home/%s/code/config/vimrc\n' "${USR}" > /home/${USR}/.vimrc
+ln -s /home/${USR}/code/config/Rprofile /home/${USR}/.Rprofile
+ln -s /home/${USR}/code/config/sqliterc /home/${USR}/.sqliterc
+ln -s /home/${USR}/code/config/duckdbrc /home/${USR}/.duckdbrc
+ln -s /home/${USR}/code/config/psqlrc /home/${USR}/.psqlrc
 Rscript -e "dir.create(Sys.getenv('R_LIBS_USER'),recursive=TRUE)"
 
 ## ## The below is needed because fs package in R will not compile otherwise
-## printf 'unset QUOTING_STYLE' >> /home/${USR:-usr}/.zshrc
+## printf 'unset QUOTING_STYLE' >> /home/${USR}/.zshrc
 ( cat <<EOF
 msg() {
 echo '
@@ -82,16 +82,16 @@ echo '
 }
 msg
 EOF
-) >> /home/${USR:-usr}/.zshrc
-mkdir -p /home/${USR:-usr}/.local
-curl -O -sSf https://download.clojure.org/install/linux-install-1.11.1.1347.sh && bash ./linux-install-1.11.1.1347.sh -p /home/${USR:-usr}/.local && rm -rf linux-install-1.11.1.1347.sh
+) >> /home/${USR}/.zshrc
+mkdir -p /home/${USR}/.local
+curl -O -sSf https://download.clojure.org/install/linux-install-1.11.1.1347.sh && bash ./linux-install-1.11.1.1347.sh -p /home/${USR}/.local && rm -rf linux-install-1.11.1.1347.sh
 EOT
 
 RUN <<EOT
-pushd /home/${USR:-usr}/.local
+pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
-mkdir -p /home/${USR:-usr}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR:-usr}/micromamba
-MAMBA_ROOT_PREFIX=/home/${USR:-usr}/micromamba /home/${USR:-usr}/.local/bin/micromamba install --channel conda-forge --name base --yes ipython numpy pandas scikit-learn polars hypothesis pytest
+mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba
+MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba install --channel conda-forge --name base --yes ipython numpy pandas scikit-learn polars hypothesis pytest
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
