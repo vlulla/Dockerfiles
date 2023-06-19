@@ -25,7 +25,7 @@ apt-get update -qq --yes --fix-missing && \
   echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> /etc/skel.bashrc && \
   echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> ~/.bashrc && \
   echo "options(Ncpus = $(nproc)-2,mc.cores=$(nproc)-2)" >> ~/.Rprofile && \
-  Rscript -e "update.packages(ask=F)"
+  Rscript -e "update.packages(checkBuilt=TRUE,dependencies=TRUE,ask=FALSE)"
 EOT
 
 RUN <<EOT

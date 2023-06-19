@@ -15,10 +15,10 @@ MAKEFLAGS += --no-builtin-rules
 
 
 all: Dockerfile
-> docker buildx build $(if $(I),--no-cache,) --progress=plain --tag rrobyn:$$(command date +"%Y%m%d") -f $< .
+> docker buildx build $(if $(I),--no-cache,) --platform=linux/amd64 --network=host --progress=plain --tag rrobyn:$$(command date +"%Y%m%d") -f $< .
 
 run:
-> docker run --tty --interactive --name tst --rm --entrypoint bash rrobyn:$$(command date +"%Y%m%d")
+> docker run --tty --interactive --name tst --platform=linux/amd64 --rm --entrypoint bash rrobyn:$$(command date +"%Y%m%d")
 
 clean:
 > @echo "Removing the docker image"
