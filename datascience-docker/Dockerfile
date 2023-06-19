@@ -35,7 +35,12 @@ EOT
 
 RUN <<EOT
 pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pushd tree && make && make install && popd && popd && rm -rf tree
-pushd /tmp && curl -sSLO https://github.com/duckdb/duckdb/releases/download/v0.8.0/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
+pushd /tmp && curl -sSLO https://github.com/duckdb/duckdb/releases/download/v0.8.1/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
+(
+extensions=( autocomplete excel fts fts httpfs icu inet json parquet postgres_scanner spatial sqlite_scanner substrait tpcds tpch visualizer )
+for ext in ${extensions[@]}; do
+  printf "INSTALL '%s';\n" "${ext}"
+done) | duckdb
 EOT
 
 ARG UID=${UID:-1000}
