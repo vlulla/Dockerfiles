@@ -14,7 +14,7 @@ ENV PATH=${CONDA_DIR}/bin:${PATH}
 
 RUN <<EOT
 apt-get update -qq --yes --fix-missing && \
-  apt-get install --yes --auto-remove --no-install-recommends build-essential wget bzip2 ca-certificates git tini r-base r-base-dev cmake libssl-dev libopenblas-base libatlas3-base libcurl4-openssl-dev libgit2-dev zlib1g-dev libharfbuzz-dev libfontconfig1-dev libfribidi-dev libxml2-dev && \
+  apt-get install --yes --auto-remove --no-install-recommends build-essential wget bzip2 ca-certificates git tini r-base r-base-dev cmake libssl-dev libopenblas-base libatlas3-base libcurl4-openssl-dev libgit2-dev zlib1g-dev libharfbuzz-dev libfontconfig1-dev libfribidi-dev libxml2-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev && \
   apt-get autoclean && rm -rf /var/lib/apt/lists/* && \
   wget --no-hsts --quiet https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/${MINIFORGE_NAME}-${MINIFORGE_VERSION}-Linux-$(uname -m).sh -O /tmp/miniforge.sh && \
   /bin/bash /tmp/miniforge.sh -b -p ${CONDA_DIR} && \
