@@ -13,7 +13,12 @@ MAKEFLAGS += --no-builtin-rules
 .PHONY: all clean run
 .DEFAULT_GOAL: all
 
+## macOS has low uid/gid values!!!
+ifeq ($(shell uname), Linux)
 BUILD_ARGS=--build-arg USR=$$(id -un) --build-arg UID=$$(id -u) --build-arg GRP=$$(id -gn) --build-arg GID=$$(id -g)
+else
+BUILD_ARGS=
+endif
 
 all: Dockerfile
 > docker buildx build $(if $(I),--no-cache,) --platform=linux/amd64 --network=host                  --tag rrobyn:$$(command date +"%Y%m%d") -f $< ${BUILD_ARGS} .
