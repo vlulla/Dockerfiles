@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:jammy
+FROM debian:bookworm
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -29,10 +29,11 @@ EOT
 RUN <<EOT
 apt-get update -qq --yes
 apt-get install --yes --no-install-recommends software-properties-common dirmngr
-wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
-printf "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" > /etc/apt/sources.list.d/R.list
+gpg --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'
+gpg --armor --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' | tee /etc/apt/trusted.gpg.d/cran_debian_key.asc
+printf "deb http://cloud.r-project.org/bin/linux/debian $(lsb_release -cs)-cran40/" > /etc/apt/sources.list.d/R.list
 apt-get update -qq --yes
-apt-get install --yes r-base r-base-dev cmake libssl-dev libopenblas-base libatlas3-base libcurl4-openssl-dev libgit2-dev zlib1g-dev libharfbuzz-dev libfontconfig1-dev libfribidi-dev libxml2-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libudunits2-dev libpq-dev libgeos-dev libgdal-dev
+apt-get install --yes r-base r-base-dev cmake libssl-dev libatlas3-base libcurl4-openssl-dev libgit2-dev zlib1g-dev libharfbuzz-dev libfontconfig1-dev libfribidi-dev libxml2-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libudunits2-dev libpq-dev libgeos-dev libgdal-dev
 ## echo "options(Ncpus = parallel::detectCores()-2,mc.cores=parallel::detectCores()-2)" >> ~/.Rprofile
 sed -i.orig -E -e 's/options\(repos = r\)/options(Ncpus = parallel::detectCores()-2, mc.cores = parallel::detectCores()-2, repos = r)/g' /etc/R/Rprofile.site
 Rscript -e "update.packages(checkBuilt=TRUE,dependencies=TRUE,ask=FALSE)"
