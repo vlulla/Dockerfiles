@@ -58,6 +58,7 @@ EOT
 
 WORKDIR /home/${USR}
 USER ${USR}
+RUN echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> ~/.bashrc
 
 ENTRYPOINT ["tini","--"]
 CMD ["/bin/bash"]
