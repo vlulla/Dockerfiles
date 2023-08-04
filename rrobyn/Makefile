@@ -13,9 +13,13 @@ MAKEFLAGS += --no-builtin-rules
 .PHONY: all clean run
 .DEFAULT_GOAL: all
 
+BUILD_ARGS=--build-arg USR=$$(id -un) --build-arg UID=$$(id -u) --build-arg GRP=$$(id -gn) --build-arg GID=$$(id -g)
 
 all: Dockerfile
-> docker buildx build $(if $(I),--no-cache,) --platform=linux/amd64 --network=host --progress=plain --tag rrobyn:$$(command date +"%Y%m%d") -f $< .
+> docker buildx build $(if $(I),--no-cache,) --platform=linux/amd64 --network=host                  --tag rrobyn:$$(command date +"%Y%m%d") -f $< ${BUILD_ARGS} .
+
+build-nobuildx: Dockerfile
+> docker build $(if $(I),--no-cache,) --platform=linux/amd64 --network=host --tag rrobyn:$$(command date +"%Y%m%d") -f $< ${BUILD_ARGS} .
 
 run:
 > docker run --tty --interactive --name tst --platform=linux/amd64 --volume="$$(pwd):/app" --workdir=/app --rm --entrypoint bash rrobyn:$$(command date +"%Y%m%d")

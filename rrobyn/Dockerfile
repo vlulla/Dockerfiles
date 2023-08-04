@@ -36,7 +36,7 @@ apt-get install --yes r-base r-base-dev cmake libssl-dev libopenblas-base libatl
 ## echo "options(Ncpus = parallel::detectCores()-2,mc.cores=parallel::detectCores()-2)" >> ~/.Rprofile
 sed -i.orig -E -e 's/options\(repos = r\)/options(Ncpus = parallel::detectCores()-2, mc.cores = parallel::detectCores()-2, repos = r)/g' /etc/R/Rprofile.site
 Rscript -e "update.packages(checkBuilt=TRUE,dependencies=TRUE,ask=FALSE)"
-Rscript -e "install.packages(c('remotes','reticulate','ggplot2','dplyr','purrr'),dependencies=TRUE,ask=FALSE)"
+Rscript -e "install.packages(c('remotes','reticulate','ggplot2','dplyr','purrr','tidyverse'),dependencies=TRUE,ask=FALSE)"
 EOT
 
 RUN <<EOT
@@ -45,6 +45,19 @@ Rscript -e "remotes::install_github('facebookexperimental/Robyn/R')"
 EOT
 
 ENV R_LIBS_USER="${R_LIBS_USER:+${R_LIBS_USER}:}/usr/local/lib/R/site-library:/usr/local/library/R/"
+
+ARG UID=${UID:-1000}
+ARG USR=${USR:-usr}
+ARG GID=${GID:-1000}
+ARG GRP=${GRP:-grp}
+
+RUN <<EOT
+addgroup --gid ${GID} ${GRP}
+adduser --uid ${UID} --ingroup ${GRP} ${USR}
+EOT
+
+WORKDIR /home/${USR}
+USER ${USR}
 
 ENTRYPOINT ["tini","--"]
 CMD ["/bin/bash"]
