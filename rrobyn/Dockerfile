@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:focal-20230624
+FROM ubuntu:jammy
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
