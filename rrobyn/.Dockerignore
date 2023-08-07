@@ -1,2 +1,3 @@
 .Dockerignore
 Makefile
+docker-build-*.log

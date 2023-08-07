@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:jammy
+FROM --platform=linux/amd64 ubuntu:jammy
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -40,7 +40,7 @@ Rscript -e "install.packages(c('remotes','reticulate','ggplot2','dplyr','purrr',
 EOT
 
 RUN <<EOT
-pip install nevergrad rpy2
+pip install --no-cache-dir nevergrad rpy2
 Rscript -e "remotes::install_github('facebookexperimental/Robyn/R')"
 EOT
 

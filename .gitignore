@@ -5,3 +5,5 @@ tmp
 *.run.xml
 .hypothesis
 .DS_Store
+
+docker-build-*.log

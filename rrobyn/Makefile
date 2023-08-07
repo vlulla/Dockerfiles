@@ -21,10 +21,10 @@ BUILD_ARGS=
 endif
 
 all: Dockerfile
-> docker buildx build $(if $(I),--no-cache,) --platform=linux/amd64 --network=host                  --tag rrobyn:$$(command date +"%Y%m%d") -f $< ${BUILD_ARGS} .
+> docker buildx build $(if $(I),--no-cache,) --platform=linux/amd64 --network=host                  --tag rrobyn:$$(command date +"%Y%m%d") -f $< ${BUILD_ARGS} . > docker-build-$$(command date +"%Y%m%d").log 2>&1
 
 build-nobuildx: Dockerfile
-> docker build $(if $(I),--no-cache,) --platform=linux/amd64 --network=host --tag rrobyn:$$(command date +"%Y%m%d") -f $< ${BUILD_ARGS} .
+> docker build $(if $(I),--no-cache,) --platform=linux/amd64 --network=host --tag rrobyn:$$(command date +"%Y%m%d") -f $< ${BUILD_ARGS} . > docker-build-$$(command date +"%Y%m%d").log 2>&1
 
 run:
 > docker run --tty --interactive --name tst --platform=linux/amd64 --volume="$$(pwd):/app" --workdir=/app --rm --entrypoint bash rrobyn:$$(command date +"%Y%m%d")
