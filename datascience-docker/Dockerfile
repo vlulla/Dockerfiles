@@ -66,6 +66,7 @@ ln -s /home/${USR}/code/config/Rprofile /home/${USR}/.Rprofile
 ln -s /home/${USR}/code/config/sqliterc /home/${USR}/.sqliterc
 ln -s /home/${USR}/code/config/duckdbrc /home/${USR}/.duckdbrc
 ln -s /home/${USR}/code/config/psqlrc /home/${USR}/.psqlrc
+ln -s /home/${USR}/code/config/ripgreprc /home/${USR}/.ripgreprc
 Rscript -e "dir.create(Sys.getenv('R_LIBS_USER'),recursive=TRUE)"
 
 ## ## The below is needed because fs package in R will not compile otherwise
