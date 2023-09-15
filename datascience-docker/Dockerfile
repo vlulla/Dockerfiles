@@ -17,7 +17,7 @@ apt-get install --yes -qq --auto-remove --no-install-recommends build-essential 
 
 gpg --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'
 gpg --armor --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' > /etc/apt/trusted.gpg.d/cran_debian_key.asc
-printf 'deb https://cloud.r-project.org/bin/linux/debian bookworm-cran40/' > /etc/apt/sources.list.d/R.list
+printf 'deb http://cloud.r-project.org/bin/linux/debian bookworm-cran40/' > /etc/apt/sources.list.d/R.list
 apt-get update -qq --yes
 apt-get install --yes -qq --auto-remove r-base r-base-dev gfortran libatlas3-base libssl-dev libudunits2-dev r-cran-ggplot2 r-cran-data.table r-cran-rsqlite r-cran-matrix r-cran-tidyverse r-cran-rcpp r-cran-sf \
    libgdal-dev libfftw3-dev libgit2-dev r-cran-caret r-cran-docopt r-cran-brms littler libfribidi-dev
@@ -100,6 +100,12 @@ curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/mi
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba install --channel conda-forge --name base --yes ipython numpy pandas scikit-learn polars hypothesis pytest python-duckdb
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
+EOT
+
+RUN <<EOT
+pushd /home/${USR}/.local
+aria2c https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.3-linux-x86_64.tar.gz && tar -xzf julia-1.9.3-linux-x86_64.tar.gz && rm -rf julia-1.9.3-linux-x86_64.tar.gz
+printf 'export PATH=${PATH}:${HOME}/.local/julia-1.9.3/bin\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
