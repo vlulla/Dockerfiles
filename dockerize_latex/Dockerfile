@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 ## FROM ubuntu:jammy
 FROM debian:testing
 
@@ -7,15 +8,18 @@ ARG UNAME=vlulla
 ARG UID=1000
 ARG GID=1000
 
-RUN apt-get update -y && apt-get install -y --no-install-recommends apt-utils
-RUN apt-get install -y texlive-bibtex-extra texlive-xetex \
-      texlive-latex-extra texlive-latex-recommended \
-      latexmk biber pandoc make
+RUN <<EOT
+apt-get update --yes
+apt-get install --yes --no-install-recommends apt-utils
+apt-get install --yes texlive-bibtex-extra texlive-xetex texlive-latex-extra texlive-latex-recommended latexmk biber pandoc make
+EOT
 
-RUN groupadd --gid $GID $UNAME
-RUN useradd -m --gid $GID --uid $UID -d /home/$UNAME $UNAME
+RUN <<EOT
+groupadd --gid ${GID} ${UNAME}
+useradd -m --gid ${GID} --uid ${UID} -d /home/${UNAME} ${UNAME}
+EOT
 
-USER $UNAME
-WORKDIR /home/$UNAME
+USER ${UNAME}
+WORKDIR /home/${UNAME}
 
 CMD [ "bash" ]
