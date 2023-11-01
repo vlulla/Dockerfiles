@@ -27,7 +27,7 @@ ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install
 ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r
 ln -s /usr/lib/R/site-library/littler/examples/installBioc.r /usr/local/bin/installBioc.r
 
-MAKEFLAGS+=-j$(( $(nproc) - 2)) install2.r --error --skipinstalled xgboost arrow e1071 simstudy
+MAKEFLAGS="${MAKEFLAGS:- }-j$(( $(nproc) - 2))" install2.r --error --skipinstalled xgboost arrow e1071 simstudy
 
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
 unset DEBIAN_FRONTEND
@@ -94,11 +94,13 @@ done
 ) | duckdb
 EOT
 
+# ARG PYVERSION=${PYVERSION:-3.12.0}
+ARG PYVERSION=${PYVERSION:-3.11.0}
 RUN <<EOT
 pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba
-MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba install --channel conda-forge --name base --yes ipython numpy pandas scikit-learn polars hypothesis pytest python-duckdb
+MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba install --channel conda-forge --name base --yes "python=${PYVERSION}" ipython numpy pandas scikit-learn polars hypothesis pytest python-duckdb
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
 EOT
 
