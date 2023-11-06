@@ -11,7 +11,7 @@ ARG GID=1000
 RUN <<EOT
 apt-get update --yes
 apt-get install --yes --no-install-recommends apt-utils
-apt-get install --yes texlive-bibtex-extra texlive-xetex texlive-latex-extra texlive-latex-recommended latexmk biber pandoc make
+apt-get install --yes texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-bibtex-extra texlive-xetex texlive-latex-extra texlive-latex-recommended texlive-science latexmk biber pandoc make
 EOT
 
 RUN <<EOT
