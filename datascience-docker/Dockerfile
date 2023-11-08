@@ -8,6 +8,7 @@ SHELL ["/bin/bash", "-c"]
 
 ## Useful tools for all of my exploratory work.
 RUN <<EOT
+set -ex
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq --yes
 
@@ -34,6 +35,7 @@ unset DEBIAN_FRONTEND
 EOT
 
 RUN <<EOT
+set -ex
 pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pushd tree && make && make install && popd && popd && rm -rf tree
 pushd /tmp && aria2c https://github.com/duckdb/duckdb/releases/download/v0.8.1/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
 EOT
@@ -49,6 +51,7 @@ ARG GRP=${GRP:-grp}
 ## ADD --chown=${USR}:${GRP} . /home/usr
 
 RUN <<EOT
+set -ex
 addgroup --gid ${GID} ${GRP}
 adduser --shell /usr/bin/zsh --uid ${UID} --ingroup ${GRP} ${USR}
 EOT
@@ -57,6 +60,7 @@ WORKDIR /home/${USR}
 USER ${USR}
 
 RUN <<EOT
+set -ex
 mkdir -p code 
 cd code && git clone https://github.com/vlulla/config.git
 
@@ -97,6 +101,7 @@ EOT
 # ARG PYVERSION=${PYVERSION:-3.12.0}
 ARG PYVERSION=${PYVERSION:-3.11.0}
 RUN <<EOT
+set -ex
 pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba
@@ -105,6 +110,7 @@ MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba cle
 EOT
 
 RUN <<EOT
+set -ex
 pushd /home/${USR}/.local
 aria2c https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.3-linux-x86_64.tar.gz && tar -xzf julia-1.9.3-linux-x86_64.tar.gz && rm -rf julia-1.9.3-linux-x86_64.tar.gz
 printf 'export PATH=${PATH}:${HOME}/.local/julia-1.9.3/bin\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
