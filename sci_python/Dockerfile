@@ -8,6 +8,7 @@ LABEL MAINTAINER="Vijay Lulla <vijaylulla@gmail.com>"
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN <<EOT
+set -ex
 micromamba install --yes --name base --channel conda-forge hypothesis geopandas
 micromamba clean --all --yes
 EOT

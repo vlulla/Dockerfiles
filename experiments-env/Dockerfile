@@ -4,6 +4,7 @@ FROM debian:${VERSION}
 ARG VERSION
 
 RUN <<EOT
+set -ex
 apt-get update -qq --yes 
 
 apt-get install --yes --auto-remove --no-install-recommends build-essential
@@ -18,6 +19,7 @@ ARG USR=usr
 ARG GRP=grp
 
 RUN <<EOT
+set -ex
 adduser --group ${GRP}
 adduser --shell /bin/zsh --ingroup ${GRP} ${USR}
 EOT

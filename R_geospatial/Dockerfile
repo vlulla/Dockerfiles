@@ -12,6 +12,7 @@ ENV TZ UTC
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 RUN <<EOT
+   set -ex
    apt-get update -qq --yes
    apt-get install -qq --yes --no-install-recommends software-properties-common dirmngr wget  parallel
    wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
@@ -47,6 +48,7 @@ ARG RGROUP=${RGROUP:-r}
 ARG HOME=/home/${RUSER}
 
 RUN <<EOT
+set -ex
 groupadd -g ${GID} ${RGROUP} && useradd -l -m -u ${UID} -g ${RGROUP} -G sudo,${RGROUP} ${RUSER}
 chown -R ${RUSER}:${RGROUP} ${HOME}
 EOT
