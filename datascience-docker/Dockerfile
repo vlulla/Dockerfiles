@@ -104,7 +104,7 @@ set -ex
 pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba
-MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba install --channel conda-forge --name base --yes "python=${PYVERSION}" ipython numpy pandas scikit-learn polars hypothesis pytest python-duckdb
+MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba install --channel conda-forge --name base --yes "python=${PYVERSION}" ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
 EOT
 
