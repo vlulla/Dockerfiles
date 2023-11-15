@@ -35,7 +35,7 @@ EOT
 
 RUN <<EOT
 set -ex
-pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pushd tree && make && make install && popd && popd && rm -rf tree
+pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pushd tree && make && make install && popd && rm -rf tree && popd
 pushd /tmp && aria2c https://github.com/duckdb/duckdb/releases/download/v0.9.2/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
 EOT
 
@@ -106,6 +106,7 @@ curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/mi
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba install --channel conda-forge --name base --yes "python=${PYVERSION}" ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
+printf 'micromamba activate\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
 EOT
 
 RUN <<EOT
