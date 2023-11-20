@@ -3,7 +3,7 @@ version: '3.1'
 services:
   database:
     container_name: postgis
-    image: postgis/postgis:15-3.3
+    image: postgis/postgis:latest
     restart: always
     hostname: docker-postgis
     environment: { "POSTGRES_PASSWORD": "pgpass", "POSTGRES_USER": "postgres", "TZ": "utc" }
