@@ -15,7 +15,7 @@ $ docker container inspect db_container ## the name is the service name in compo
 $ docker container inspect db_container | jq '.[0].NetworkSettings.Ports'
 ## Now we can use the HostPort with the host psql command!
 $ psql -h localhost -p 25432 -U postgres postgres 
-## $ docker exec -it postgis psql -h localhost -p 25432 -U postgres postgres ## If you don't have psql locally installed!
+## $ docker exec -it postgis psql -h localhost -U postgres postgres ## If you don't have psql locally installed!
 ## Details for these can be found in the compose.yaml file
 ## added advantage that the settings from ${HOME}/.psqlrc will be applied to this exploratory db!!
 psql > \d
