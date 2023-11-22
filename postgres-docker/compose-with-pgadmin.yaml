@@ -7,7 +7,7 @@ services:
     restart: always
     hostname: docker-db
     environment: { "POSTGRES_PASSWORD": "example", "POSTGRES_USER": "postgres", "TZ": "utc" }
-    volumes: [ "./20-create-role.sql:/docker-entrypoint-initdb.d/20-create-role.sql" ]
+    volumes: [ "./20-create-role.sql:/docker-entrypoint-initdb.d/20-create-role.sql:ro" ]
     ports: [ "25432:5432" ]
     networks: { "pgnet" : { "aliases": [ "db" ] } }
   pgadmin:
