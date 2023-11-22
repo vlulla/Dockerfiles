@@ -4,7 +4,7 @@ FROM ubuntu:${VERSION}
 ARG VERSION
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
-SHELL ["/bin/bash", "-c"]
+SHELL ["/bin/bash", "-eux", "-o", "pipefail", "-c"]
 
 ## Useful tools for all of my exploratory work.
 RUN <<EOT
@@ -16,7 +16,7 @@ apt-get install --yes -qq --auto-remove --no-install-recommends build-essential 
    git jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps zsh parallel lua5.4 graphviz \
    sed gawk sqlite3 unzip zstd apt-utils less libcurl4-openssl-dev libxml2-dev libnode-dev libuv1-dev default-jdk rlwrap xserver-xorg-core aria2 wget
 
-wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+curl -sL https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
 printf "deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" > /etc/apt/sources.list.d/R.list
 apt-get update -qq --yes
 apt-get install --yes -qq --auto-remove r-base r-base-dev gfortran libatlas3-base libssl-dev libudunits2-dev r-cran-ggplot2 r-cran-data.table r-cran-rsqlite r-cran-matrix r-cran-tidyverse r-cran-rcpp r-cran-sf \
