@@ -20,7 +20,7 @@ curl -sL https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee 
 printf "deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" > /etc/apt/sources.list.d/R.list
 apt-get update -qq --yes
 apt-get install --yes -qq --auto-remove r-base r-base-dev gfortran libatlas3-base libssl-dev libudunits2-dev r-cran-ggplot2 r-cran-data.table r-cran-rsqlite r-cran-matrix r-cran-tidyverse r-cran-rcpp r-cran-sf \
-   libgdal-dev libfftw3-dev libgit2-dev r-cran-caret r-cran-docopt r-cran-brms littler libfribidi-dev
+   libgdal-dev libfftw3-dev libgit2-dev r-cran-caret r-cran-docopt r-cran-brms littler libfribidi-dev uuid-dev
 
 ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r
 ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r
