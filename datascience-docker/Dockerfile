@@ -90,7 +90,7 @@ EOF
 mkdir -p /home/${USR}/.local
 aria2c https://download.clojure.org/install/linux-install-1.11.1.1347.sh && bash ./linux-install-1.11.1.1347.sh -p /home/${USR}/.local && rm -rf linux-install-1.11.1.1347.sh
 (
-extensions=( autocomplete excel fts fts httpfs icu inet json parquet postgres_scanner spatial sqlite_scanner substrait tpcds tpch visualizer )
+extensions=( arrow autocomplete aws azure excel fts httpfs iceberg icu inet json mysql_scanner parquet postgres_scanner spatial sqlite_scanner substrait tpcds tpch visualizer )
 for ext in ${extensions[@]}; do
   printf "INSTALL '%s';\n" "${ext}"
 done
