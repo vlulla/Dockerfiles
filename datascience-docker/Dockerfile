@@ -27,7 +27,7 @@ ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install
 ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r
 ln -s /usr/lib/R/site-library/littler/examples/installBioc.r /usr/local/bin/installBioc.r
 
-MAKEFLAGS="${MAKEFLAGS:- }-j$(( $(nproc) - 2))" install2.r --error --skipinstalled xgboost arrow e1071 simstudy
+MAKEFLAGS="${MAKEFLAGS:- }-j$(( $(nproc) - 2))" install2.r --error --skipinstalled xgboost arrow e1071 simstudy collapse
 
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
 unset DEBIAN_FRONTEND
