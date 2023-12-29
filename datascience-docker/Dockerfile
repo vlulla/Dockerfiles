@@ -112,8 +112,8 @@ EOT
 RUN <<EOT
 set -ex
 pushd /home/${USR}/.local
-aria2c https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.4-linux-x86_64.tar.gz && tar -xzf julia-1.9.4-linux-x86_64.tar.gz && rm -rf julia-1.9.4-linux-x86_64.tar.gz
-printf 'export PATH=${PATH}:${HOME}/.local/julia-1.9.4/bin\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
+aria2c https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-1.10.0-linux-x86_64.tar.gz && tar -xzf julia-1.10.0-linux-x86_64.tar.gz && rm -rf julia-1.10.0-linux-x86_64.tar.gz
+printf 'export PATH=${PATH}:${HOME}/.local/julia-1.10.0/bin\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
