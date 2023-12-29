@@ -97,8 +97,7 @@ done
 ) | duckdb
 EOT
 
-# ARG PYVERSION=${PYVERSION:-3.12.0}
-ARG PYVERSION=${PYVERSION:-3.11.0}
+ARG PYVERSION=${PYVERSION:-3.12.1}
 RUN <<EOT
 set -ex
 pushd /home/${USR}/.local
