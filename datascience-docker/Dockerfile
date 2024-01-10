@@ -20,7 +20,7 @@ curl -sL https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee 
 printf "deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" > /etc/apt/sources.list.d/R.list
 apt-get update -qq --yes
 apt-get install --yes -qq --auto-remove r-base r-base-dev gfortran libatlas3-base libssl-dev libudunits2-dev r-cran-ggplot2 r-cran-data.table r-cran-rsqlite r-cran-matrix r-cran-tidyverse r-cran-rcpp r-cran-sf \
-   libgdal-dev libfftw3-dev libgit2-dev r-cran-caret r-cran-docopt r-cran-brms littler libfribidi-dev uuid-dev
+   libgdal-dev libfftw3-dev libgit2-dev r-cran-caret r-cran-docopt r-cran-brms r-cran-glmnet littler libfribidi-dev uuid-dev
 
 ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r
 ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r
@@ -97,8 +97,7 @@ done
 ) | duckdb
 EOT
 
-# ARG PYVERSION=${PYVERSION:-3.12.0}
-ARG PYVERSION=${PYVERSION:-3.11.0}
+ARG PYVERSION=${PYVERSION:-3.12.1}
 RUN <<EOT
 set -ex
 pushd /home/${USR}/.local
@@ -112,8 +111,7 @@ EOT
 RUN <<EOT
 set -ex
 pushd /home/${USR}/.local
-aria2c https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.4-linux-x86_64.tar.gz && tar -xzf julia-1.9.4-linux-x86_64.tar.gz && rm -rf julia-1.9.4-linux-x86_64.tar.gz
-printf 'export PATH=${PATH}:${HOME}/.local/julia-1.9.4/bin\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
+curl -fsSL https://install.julialang.org | sh -s -- -y
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
