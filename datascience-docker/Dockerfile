@@ -108,11 +108,10 @@ MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba cle
 printf 'micromamba activate\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
 EOT
 
-RUN <<EOT
-set -ex
-pushd /home/${USR}/.local
-curl -fsSL https://install.julialang.org | sh -s -- -y
-EOT
+## RUN <<EOT
+## set -ex
+## curl -fsSL https://install.julialang.org | sh -s -- -y
+## EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
 ## Might resolve timedatectl/systemd issues that I saw in R console on Vertex AI??
