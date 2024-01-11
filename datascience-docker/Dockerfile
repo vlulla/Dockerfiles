@@ -39,6 +39,14 @@ pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pu
 pushd /tmp && aria2c https://github.com/duckdb/duckdb/releases/download/v0.9.2/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
 EOT
 
+RUN <<EOT
+mkdir -p /etc/apt/keyrings
+curl -L https://pkg.osquery.io/deb/pubkey.gpg | tee /etc/apt/keyrings/osquery.asc
+printf "deb [arch=amd64 signed-by=/etc/apt/keyrings/osquery.asc] https://pkg.osquery.io/deb deb main" > /etc/apt/sources.list.d/osquery.list
+apt-get update -qq --yes
+apt-get install --yes osquery
+EOT
+
 ARG UID=${UID:-1000}
 ARG USR=${USR:-usr}
 ARG GID=${GID:-1000}
