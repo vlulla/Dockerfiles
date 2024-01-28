@@ -45,8 +45,7 @@ Using `docker compose` is handy because it will automatically create/destroy the
 
 ```bash
 $ cd /tmp && git clone https://github.com/stac-utils/pgstac.git pgstac.git 
-$ cd pgstac.git 
-$ bash -c "$(awk '/\\i sql/{print("cat",$2)}' pgstac.sql)" > 30-pgstac.sql
+$ cat /tmp/pgstac.git/src/pgstac/pgstac.sql > 30-pgstac.sql
 ```
 ---
 
