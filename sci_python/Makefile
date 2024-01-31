@@ -12,8 +12,10 @@ IMGTAG = sci_python
 .PHONY: all clean cleanall
 .DEFAULT: all
 
+DOCKER_OPTS = --platform linux/amd64 --network=host $(if $(NC),--no-cache,) --progress=plain
+
 all: Dockerfile
-> docker buildx build --progress=plain $(if $(NC),--no-cache,) --tag ${IMGTAG} -f $< .
+> docker buildx build $(DOCKER_OPTS) --tag $(IMGTAG) -f $< .
 
 
 clean:
