@@ -37,7 +37,7 @@ EOT
 RUN <<EOT
 set -ex
 pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pushd tree && make && make install && popd && rm -rf tree && popd
-pushd /tmp && aria2c https://github.com/duckdb/duckdb/releases/download/v0.9.2/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
+pushd /tmp && aria2c https://github.com/duckdb/duckdb/releases/download/v0.10.0/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
 EOT
 
 RUN <<EOT
@@ -99,7 +99,7 @@ EOF
 mkdir -p /home/${USR}/.local
 aria2c https://download.clojure.org/install/linux-install-1.11.1.1347.sh && bash ./linux-install-1.11.1.1347.sh -p /home/${USR}/.local && rm -rf linux-install-1.11.1.1347.sh
 (
-extensions=( arrow autocomplete aws azure excel fts httpfs iceberg icu inet json mysql_scanner parquet postgres_scanner spatial sqlite_scanner substrait tpcds tpch visualizer )
+extensions=( arrow autocomplete aws azure excel fts httpfs iceberg icu inet json mysql_scanner parquet postgres_scanner spatial sqlite_scanner substrait tpcds tpch )
 for ext in ${extensions[@]}; do
   printf "INSTALL '%s';\n" "${ext}"
 done
