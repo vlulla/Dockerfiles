@@ -20,9 +20,9 @@ up: compose.yaml
 up-with-pgadmin: compose-with-pgadmin.yaml
 > docker compose -f $< up
 
-start: compose.yaml
+start: compose.yaml | up
 > docker compose -f $< start
-start-with-pgadmin: compose-with-pgadmin.yaml
+start-with-pgadmin: compose-with-pgadmin.yaml | up-with-pgadmin
 > docker compose -f $< start
 
 stop: compose.yaml
