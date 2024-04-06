@@ -97,7 +97,7 @@ msg
 EOF
 ) >> /home/${USR}/.zshrc
 mkdir -p /home/${USR}/.local
-aria2c https://download.clojure.org/install/linux-install-1.11.1.1347.sh && bash ./linux-install-1.11.1.1347.sh -p /home/${USR}/.local && rm -rf linux-install-1.11.1.1347.sh
+aria2c https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh && bash ./linux-install.sh -p /home/${USR}/.local && rm -rf linux-install.sh
 (
 extensions=( arrow autocomplete aws azure excel fts httpfs iceberg icu inet json parquet postgres_scanner spatial sqlite_scanner substrait tpcds tpch )
 for ext in ${extensions[@]}; do
