@@ -30,10 +30,10 @@ stop: compose.yaml
 stop-with-pgadmin: compose-with-pgadmin.yaml
 > docker compose -f $< stop
 
-down: compose.yaml
+down: compose.yaml | stop
 > docker compose -f $< down
 
-down-with-pgadmin: compose-with-pgadmin.yaml
+down-with-pgadmin: compose-with-pgadmin.yaml | stop-with-pgadmin
 > docker compose -f $< down
 
 clean:
