@@ -1,11 +1,11 @@
 services:
   database:
-    container_name: db-container
+    container_name: postgis
     image: postgis/postgis:latest
     restart: always
-    hostname: docker-db
+    hostname: docker-postgis
     environment: { "POSTGRES_PASSWORD": "example", "POSTGRES_USER": "postgres", "TZ": "utc" }
-    volumes: [ "./20-create-role.sql:/docker-entrypoint-initdb.d/20-create-role.sql:ro" ]
+    volumes: [ "./20-create-role.sql:/docker-entrypoint-initdb.d/20-create-role.sql:ro", "./psqlrc:/etc/postgresql-common/psqlrc:ro" ]
     ports: [ "25432:5432" ]
     networks: { "pgnet" : { "aliases": [ "db" ] } }
   pgadmin:

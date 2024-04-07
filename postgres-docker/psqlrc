@@ -1,0 +1,84 @@
+-- Comments start with --
+--
+-- File location:
+--     Linux: ~/.psqlrc
+--     Windows: %AppData%/postgresql/psqlrc.conf
+
+\set QUIET 1
+
+SET TIMEZONE to 'UTC'; -- AWS also uses only UTC! 
+SET DateStyle='ISO, MDY';
+SET IntervalStyle='iso_8601';
+SET statement_timeout=180000; -- cancel request after 3 mins
+SET plpgsql.extra_errors TO 'all';
+SET plpgsql.extra_warnings TO 'all';
+SET max_parallel_workers_per_gather TO 4;
+
+-- Find the variables you can set in documentation of `psql` under PostgreSQL Client Applications
+-- in the manual (part VI. Reference)
+\set COMP_KEYWORD_CASE 'upper'
+\set ECHO 'errors'
+-- \set ECHO 'queries'
+\set ECHO_HIDDEN 'on'
+\set ON_ERROR_STOP 'on'
+\set ON_ERROR_ROLLBACK 'interactive'
+\set VERBOSITY 'verbose'
+\set HISTCONTROL 'ignoreboth'
+\set HISTSIZE 20000
+\set PROMPT1 '%n@%/ [%p] %x%R%# '
+\set PROMPT2 '%/%R%# '
+\pset null '∅'
+\pset linestyle 'unicode'
+\pset unicode_header_linestyle double
+\pset border 2
+\setenv PAGER 'less'
+\setenv LESS '-iMFXSx4R'
+\setenv EDITOR 'vim'
+
+-- A neat idea from https://opensourcedbms.com/dbms/psqlrc-psql-startup-file-for-postgres/
+\echo 'Some custom extra commands:\n'
+\echo '   :cat_tblsize --  Tablesizes (rows, cols) of various tables in the pg_catalog namespace.'
+\echo '   :cols        --  List columns of all the tables'
+\echo '   :cols_arr    --  List cols as array. This is helpful to figure out what cols to use for relation.'
+\echo '   :dbsize      --  Database size'
+\echo '   :explain     --  Explain with costs off.  -- example :explain select * from tbl where x=2'
+\echo '   :indexes     --  List indexes on tables in search_path'
+\echo '   :ncols       --  List # of columns for each of the tables'
+\echo '   :nrows       --  Estimate of # rows in all tables in *all schemas*'
+\echo '                    (Run VACUUM if many tables have 0 rows). Use count(*) to get actual count of rows.'
+\echo '   :schemacols  --  Columns in tables in schemas in the current search_path'
+\echo '   :schemarows  --  Estimate of # rows in all tables in schemas in the current search_path'
+\echo '   :setsp       --  Set search_path to all schemas accessible/listed by the psql \dn command'
+\echo '   :settings    --  Server settings'
+\echo '   :sp          --  SHOW search_path'
+\echo '   :tables      --  Show all tables in *all schemas*. Same as nrows above!'
+\echo '   :tblsize     --  Table sizes'
+\echo '   :cmds        --  List the commands that you can call'
+\echo '   :help        --  List the commands that you can call'
+\echo ''
+\echo 'Type \\set to see how these are defined.\n\n'
+\set cmds '\\qecho ''\nCommands you can call:\n  [ :cat_tblsize , :cols , :cols_arr , :dbsize , :explain, :indexes , :ncols , :nrows , :schemacols , :schemarows , :setsp , :settings , :sp , :tables , :tblsize , :cmds, :help ]\n  \\\\qecho :tables -- to see how tables is defined.\n  \\\\qecho :cmds -- interesting use of qecho!\n'''
+\set help :cmds
+\set cat_tblsize 'with schemas(oid,_schema) as (select oid,nspname from pg_namespace where nspname=''pg_catalog''),tables(_schema,_tbl,_fqtn,_rowestimate,_ncols) as (select s._schema,relname,quote_ident(s._schema)||''.''||quote_ident(relname::text),reltuples,relnatts from pg_class c join schemas s on c.relnamespace=s.oid where has_schema_privilege(relnamespace,''USAGE'') and relkind=''r'') select _schema schemaname,_tbl tablename, to_char(_rowestimate,''999G999G999G999'') rowestimate,_ncols ncols,pg_size_pretty(pg_table_size(_fqtn)) tbl_size,pg_size_pretty(pg_indexes_size(_fqtn)) index_size,pg_size_pretty(pg_total_relation_size(_fqtn)) total_relation_size from tables order by tablename;'
+\set cols 'with cols as (select c.relnamespace::regnamespace::text as schemaname, att.attrelid::regclass as tablename, attname as colname, row_number() over (partition by attrelid order by attnum) colnum, atttypid::regtype as coltype from pg_attribute att join pg_class c on att.attrelid = c.oid where att.attnum > 0 and c.relkind=''r'' and c.relnamespace::regnamespace::text not in (''pg_catalog'',''pg_toast'',''information_schema'') and att.atttypid <> 0 order by schemaname,tablename,att.attnum) select * from cols;'
+\set cols_arr 'with cols as ( select c.relnamespace::regnamespace::text as schemaname, att.attrelid::regclass as tablename, attname as colname, row_number() over (partition by attrelid order by attnum) colnum, pg_catalog.format_type(atttypid,atttypmod) as coltype from pg_attribute att join pg_class c on att.attrelid = c.oid where att.attnum > 0 and c.relkind=''r'' and c.relnamespace::regnamespace::text not in (''pg_catalog'',''pg_toast'',''information_schema'') and att.atttypid <> 0 order by schemaname,tablename,att.attnum) select schemaname,tablename,array_agg(colname||''(''||coltype||'')'' order by colnum) as "columns" from cols group by schemaname,tablename order by schemaname,tablename;'
+\set dbsize 'with dbsz(_dbname,_dbsize,_acl) as (select datname,case when has_database_privilege(current_user,oid,''CONNECT'') then pg_database_size(datname) else -1 end,datacl from pg_database) select _dbname as datname,case when _dbsize=-1 then ''No CONNECT privilege for pg_database_size'' else pg_size_pretty(_dbsize) end dbsize,_acl as acl from dbsz order by _dbname,_dbsize desc;'
+\set explain 'explain (costs off)'
+\set indexes 'select schemaname as "schema",quote_ident(tablename) as "table",indexdef from pg_indexes where schemaname not like all(array[''pg\\_%'',''information\\_schema%'']) order by schemaname,tablename;'
+\set ncols 'with ncols as (select c.relnamespace::regnamespace::text as schema, attrelid::regclass as tablename,count(*) numcols from pg_attribute join pg_class c on c.oid = attrelid where c.relkind=''r'' and attnum > 0 and c.relnamespace::regnamespace::text not in (''pg_catalog'',''pg_toast'',''information_schema'') and atttypid <> 0 group by schema,tablename) select * from ncols order by schema,tablename;'
+\set nrows 'with nrows(_schema,_tbl,_nrows,_owner) as ( select quote_ident(table_schema) as schema, quote_ident(table_name) as table_name, reltuples::bigint, relowner::regrole as owner from information_schema.tables join pg_class on relname = table_name and relnamespace::regnamespace::text = table_schema where table_schema not in (''pg_catalog'',''pg_toast'',''information_schema'') and table_type<>''VIEW'' and has_schema_privilege(table_schema,''USAGE'')) select _schema schema, _tbl table_name, to_char(_nrows,''999G999G999G999'') as "# rows (roughly)",_owner owner from nrows order by schema,table_name;'
+\set schemacols 'with schemacols as (select c.relnamespace::regnamespace::text as schemaname, att.attrelid::regclass::text as tablename, attname as colname, row_number() over (partition by attrelid order by attnum) colnum, atttypid::regtype as coltype from pg_attribute att join pg_class c on att.attrelid = c.oid where att.attnum > 0 and c.relkind=''r'' and att.atttypid <> 0 and c.relnamespace::regnamespace::text in (select unnest(string_to_array(replace(setting,''"$user"'',current_user),'','')) from pg_settings where name=''search_path'')) select * from schemacols order by schemaname,tablename,colnum;'
+\set schemarows 'with schemarows(_schema,_tbl,_nrows,_owner) as ( select quote_ident(table_schema), quote_ident(table_name), reltuples::bigint, relowner::regrole from information_schema.tables join pg_class on relname = table_name and relnamespace::regnamespace::text = table_schema where table_type<>''VIEW'' and table_schema::text in (select unnest(string_to_array(replace(setting,''"$user"'',current_user),'','')) from pg_settings where name=''search_path''))  select _schema schema,_tbl table_name,to_char(_nrows,''999G999G999G999'') as "# rows(roughly)", _owner owner from schemarows order by table_name;'
+\set setsp 'update pg_settings set setting=array_to_string(s.schemas, '','') from (select ARRAY[''"$user"''] || array_agg(nspname) || ARRAY[''public''] as schemas from pg_namespace where nspname not like all(ARRAY[''pg\\_%'',''information\\_schema'',''public''])) as s where name=''search_path'';'
+\set settings 'select name,setting||case when unit is not null then '' <''||unit||''>'' else '''' end setting,source,case when length(short_desc)>40 then substr(short_desc,1,37)||''...'' else short_desc end short_desc from pg_settings order by name;'
+\set sp 'SHOW search_path;'
+\set tables 'with tables(_db,_schema,_tbl,_nrows,_ncols,_owner) as( select quote_ident(table_catalog),quote_ident(table_schema), quote_ident(table_name), reltuples::bigint,relnatts, relowner::regrole from information_schema.tables join pg_class on relname = table_name and relnamespace::regnamespace::text = table_schema where table_schema not in (''pg_catalog'',''pg_toast'',''information_schema'') and table_type<>''VIEW'' and has_schema_privilege(table_schema,''USAGE''))  select _owner as owner, _db as "database",_schema as "schema",_tbl as table_name,to_char(_nrows,''999G999G999G999'') as "# rows (roughly)",_ncols as ncols from tables order by schema,table_name;'
+-- \set tblsize 'with tables(_schema,_tbl,_fqtn,_rowestimate,_numcols) as ( select relnamespace::regnamespace::text, relname, quote_ident(relnamespace::regnamespace::text)||''.''||quote_ident(relname::text), reltuples, relnatts from pg_class where relnamespace::regnamespace::text not in (''pg_catalog'',''pg_toast'',''information_schema'') and has_schema_privilege(relnamespace,''USAGE'') and relkind=''r'') select _schema schemaname, _tbl tablename, to_char(_rowestimate,''999G999G999G999'') rowestimate, _numcols ncols, pg_size_pretty(pg_table_size(_fqtn)) tbl_size, pg_size_pretty(pg_indexes_size(_fqtn)) index_size, pg_size_pretty(pg_total_relation_size(_fqtn)) total_relation_size from tables order by pg_total_relation_size(_fqtn) desc; '
+\set tblsize 'with schemas(oid,_schema) as (select oid,nspname from pg_namespace where nspname not in (''pg_toast'',''pg_catalog'',''information_schema'')), tables(_schema,_tbl,_fqtn,_rowestimate,_ncols) as (select s._schema,relname,quote_ident(s._schema)||''.''||quote_ident(relname::text),reltuples,relnatts from pg_class c join schemas s on c.relnamespace = s.oid where has_schema_privilege(relnamespace,''USAGE'') and relkind=''r'') select _schema schemaname, _tbl tablename, to_char(_rowestimate,''999G999G999G999'') rowestimate,_ncols ncols, pg_size_pretty(pg_table_size(_fqtn)) tbl_size,pg_size_pretty(pg_indexes_size(_fqtn)) index_size,pg_size_pretty(pg_total_relation_size(_fqtn)) total_relation_size from tables order by pg_total_relation_size(_fqtn) desc;'
+
+update pg_settings set setting=array_to_string(s.schemas, ',') from (select ARRAY['"$user"'] || array_agg(nspname) || ARRAY['public'] as schemas from pg_namespace where nspname not like all(ARRAY['pg\_%','information\_schema','public'])) as s where name='search_path';
+
+\timing on
+\x auto
+
+\unset QUIET

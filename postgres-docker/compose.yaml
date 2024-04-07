@@ -5,7 +5,7 @@ services:
     restart: always
     hostname: docker-postgis
     environment: { "POSTGRES_PASSWORD": "pgpass", "POSTGRES_USER": "postgres", "TZ": "utc" }
-    volumes: [ "./20-create-role.sql:/docker-entrypoint-initdb.d/20-create-role.sql:ro", "./30-pgstac.sql:/docker-entrypoint-initdb.d/30-pgstac.sql:ro" ]
+    volumes: [ "./20-create-role.sql:/docker-entrypoint-initdb.d/20-create-role.sql:ro", "./30-pgstac.sql:/docker-entrypoint-initdb.d/30-pgstac.sql:ro" ,"./psqlrc:/etc/postgresql-common/psqlrc:ro"]
     ports: [ "25432:5432" ]
     networks: [ "pgnet" ]
 networks:
