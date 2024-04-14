@@ -3,8 +3,8 @@ LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-ARG GROUP_ID
-ARG USER_ID
+ARG GROUP_ID=${GROUP_ID:-1001}
+ARG USER_ID=${USER_ID:-1001}
 
 ## Buid with command: docker build --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) -t eems .
 ##
