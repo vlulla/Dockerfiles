@@ -20,7 +20,7 @@ set -ex
 mkdir -p /tmp/mm && cd /tmp/mm
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 mv bin/micromamba /usr/bin/
-micromamba create --name scipy --yes --channel conda-forge hypothesis numpy pandas matplotlib scipy sympy
+micromamba create --name scipy --yes --channel conda-forge hypothesis numpy pandas matplotlib scipy sympy ipython
 micromamba clean --all --yes
 rm -rf /tmp/mm
 EOT
