@@ -26,13 +26,13 @@ RUN mkdir -p ${HOME}/code/spark
 WORKDIR ${HOME}/code/spark
 RUN <<EOT
 set -ex
-curl -SL -O https://dlcdn.apache.org/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3-scala2.13.tgz && tar xf spark-3.5.0-bin-hadoop3-scala2.13.tgz && rm -rf spark-3.5.0-bin-hadoop3-scala2.13.tgz
-curl -SL -O https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz && tar xf hadoop-3.3.6.tar.gz && rm -rf hadoop-3.3.6.tar.gz
+curl -SL -O https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3-scala2.13.tgz && tar xf spark-3.5.1-bin-hadoop3-scala2.13.tgz && rm -rf spark-3.5.1-bin-hadoop3-scala2.13.tgz
+curl -SL -O https://dlcdn.apache.org/hadoop/common/hadoop-3.4.0/hadoop-3.4.0.tar.gz && tar xf hadoop-3.4.0.tar.gz && rm -rf hadoop-3.4.0.tar.gz
 EOT
 
 ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
-ENV HADOOP_HOME="${HOME}/code/spark/hadoop-3.3.6"
-ENV SPARK_HOME="${HOME}/code/spark/spark-3.5.0-bin-hadoop3-scala2.13"
+ENV HADOOP_HOME="${HOME}/code/spark/hadoop-3.4.0"
+ENV SPARK_HOME="${HOME}/code/spark/spark-3.5.1-bin-hadoop3-scala2.13"
 ENV PATH="${PATH:+${PATH}:}${HADOOP_HOME}/bin:${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${HADOOP_HOME}/lib/native"
 
