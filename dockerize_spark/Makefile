@@ -7,7 +7,7 @@ SHELL := bash
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
-.PHONY: all clean cleanall
+.PHONY: all clean cleanall run
 .DEFAULT: all
 
 IMGTAG = dockerized_spark
@@ -20,6 +20,9 @@ endif
 all: Dockerfile
 ## > sed -e "s/^ARG UID=/&$$(id -u)/g;s/^ARG GID=/&$$(id -g)/g;s/^ARG USER=/&$$(id -un)/g;s/^ARG GROUP=/&$$(id -gn)/g" $< | docker buildx build -t dockerized_spark -f - .
 > docker buildx build -f $< --platform linux/amd64 --progress=plain $(if $(NC),--no-cache,) $(UIDARGS) --network=host --tag ${IMGTAG} .
+
+run:
+> docker run -it --rm -p 127.0.0.1:4040:4040 ${IMGTAG}
 
 clean:
 > docker rmi ${IMGTAG}
