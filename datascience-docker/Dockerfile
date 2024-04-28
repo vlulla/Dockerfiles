@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-ARG VERSION=jammy
-FROM ubuntu:${VERSION}
+ARG VERSION=latest
+FROM rocker/r-ver:${VERSION}
 ARG VERSION
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
@@ -14,21 +14,10 @@ apt-get update -qq --yes
 
 apt-get install --yes -qq --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils \
    git jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps zsh parallel lua5.4 graphviz \
-   sed gawk sqlite3 unzip zstd apt-utils less libcurl4-openssl-dev libxml2-dev libnode-dev libuv1-dev default-jdk rlwrap xserver-xorg-core aria2 wget
+   sed gawk sqlite3 unzip zstd apt-utils less libcurl4-openssl-dev libxml2-dev libnode-dev libuv1-dev default-jdk rlwrap xserver-xorg-core aria2 wget \
+   libudunits2-dev libgdal-dev libgeos-dev libhdf5-dev libproj-dev libnetcdf-dev libpq-dev
 
-curl -sL https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
-printf "deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" > /etc/apt/sources.list.d/R.list
-apt-get update -qq --yes
-apt-get install --yes -qq --auto-remove r-base r-base-dev gfortran libatlas3-base libssl-dev libudunits2-dev r-cran-ggplot2 r-cran-data.table r-cran-rsqlite r-cran-matrix r-cran-tidyverse r-cran-rcpp r-cran-sf \
-   libgdal-dev libfftw3-dev libgit2-dev r-cran-caret r-cran-docopt r-cran-brms r-cran-glmnet littler libfribidi-dev uuid-dev
-
-ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r
-ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r
-ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r
-ln -s /usr/lib/R/site-library/littler/examples/installBioc.r /usr/local/bin/installBioc.r
-
-MAKEFLAGS="${MAKEFLAGS:- }-j$(( $(nproc) - 2))" install2.r --error --skipinstalled xgboost arrow e1071 simstudy collapse rbenchmark
-MAKEFLAGS="${MAKEFLAGS:- }-j$(( $(nproc) - 2))" install2.r --error BH
+install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" xgboost arrow e1071 simstudy collapse rbenchmark fastmatch BH ggplot2 RSQLite sf
 
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
 unset DEBIAN_FRONTEND
