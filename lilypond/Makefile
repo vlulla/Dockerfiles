@@ -1,8 +1,10 @@
 .PHONY: all clean
 .DEFAULT: all
 
+BUILD_ARGS=--build-arg USER=$$(id -un) --build-arg GROUP=$$(id -gn)
+
 all: Dockerfile
-	sed -e "s/^ARG UID=/&$$(id -u)/g;s/^ARG GID=/&$$(id -g)/g;s/^ARG USER=/&$$(id -un)/g;s/^ARG GROUP=/&$$(id -gn)/g" $< | docker buildx build --progress=plain -t lilypond -f - .
+	docker buildx build --progress=plain $(if $(I),--no-cache,) --network=host --platform=linux/amd64 -t lilypond ${BUILD_ARGS} -f $< .
 clean:
 	@echo "Do cleaning here"
 	docker rmi lilypond ubuntu

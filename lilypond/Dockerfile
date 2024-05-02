@@ -1,4 +1,5 @@
-FROM ubuntu:jammy
+ARG VERSION=noble
+FROM ubuntu:${VERSION}
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
 ## Build: docker build -t lilypond .
@@ -34,8 +35,8 @@ EOT
 
 ## RUN apt-get install -y iproute2 net-tools iputils-ping
 
-ARG GID=
-ARG UID=
+ARG GID=1010
+ARG UID=1010
 ARG USER=
 ARG GROUP=
 ARG HOME=/home/${USER}

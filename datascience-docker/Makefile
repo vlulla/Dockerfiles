@@ -18,7 +18,6 @@ else
 endif
 
 all: Dockerfile
-## > cat $< | docker buildx build $(if $(I),--no-cache,) --platform linux/amd64 --progress=plain --build-arg USR=$$(id -un) --build-arg GRP=$$(id -gn) --build-arg VERSION=jammy --tag ${IMGTAG}:$$(git rev-parse --short=12 HEAD) -
 > cat $< | docker buildx build $(if $(I),--no-cache,) --network=host --platform=linux/amd64 --progress=plain $(BUILD_ARGS) --tag ${IMGTAG} -
 
 run: Dockerfile
