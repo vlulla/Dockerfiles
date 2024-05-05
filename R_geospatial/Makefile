@@ -16,9 +16,7 @@ IMGTAG=r_geospatial
 ## bash $ docker buildx ls # to see the various builder contexts...
 
 all: Dockerfile
-# > sed -e "s/^ARG UID=$$/&$$(id -u)/g;s/^ARG GID=$$/&$$(id -g)/g" $< | docker buildx build -t r_geospatial -f - .
-## > docker buildx create --use --name larger-log --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=$$((15*1024*1024))
-> docker buildx build  --progress=plain $(if $(NC),--no-cache,) --build-arg UID=$$(id -u) --build-arg GID=$$(id -g) --build-arg RUSER=$$(id -un) --build-arg RGROUP=$$(id -gn) --tag $(IMGTAG) -f $< .
+> docker buildx build  --progress=plain $(if $(NC),--no-cache,) --platform=linux/amd64 --build-arg RUSER=$$(id -un) --build-arg RGROUP=$$(id -gn) --tag $(IMGTAG) -f $< .
 
 clean:
 > docker rmi $(IMGTAG)
