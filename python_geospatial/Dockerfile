@@ -36,10 +36,10 @@ USER ${PYUSR}
 
 RUN <<EOT
     set -ex
-    wget --quiet "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
-    bash "./Mambaforge-$(uname)-$(uname -m).sh" -b -p ~/mambaforge && rm -rf "~/Mambaforge-$(uname)-$(uname -m).sh"
-    ~/mambaforge/bin/mamba init bash
-    ~/mambaforge/bin/mamba install --name base --yes geopandas xarray rasterio dask distributed pyarrow pygeos polars
+    mkdir -p ${HOME}/{.local,micromamba} && pushd ${HOME}/.local
+    curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
+    ${HOME}/.local/bin/micromamba shell init -s bash -p ${HOME}/micromamba
+    MAMBA_ROOT_PREFIX=${HOME}/micromamba ${HOME}/.local/bin/micromamba create --channel conda-forge --name geo --yes geopandas xarray rasterio dask distributed pyarrow pygeos polars
 EOT
 
 ENTRYPOINT ["tini","--"]

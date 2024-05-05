@@ -15,8 +15,7 @@ IMGTAG = python_geospatial
 ## bash $ diff <(NC=0 make -n) <(make -n)
 
 all: Dockerfile
-## > sed -e "s/^ARG UID=/&$$(id -u)/g;s/^ARG GID=/&$$(id -g)/g;s/^ARG PYUSR=/&$$(id -un)/g;s/^ARG PYGRP=/&$$(id -gn)/g" $< | docker buildx build --tag python_geospatial -f - .
-> docker buildx build $(if $(NC),--no-cache,) --progress=plain -f $< --tag ${IMGTAG} --build-arg=GID=$$(id -g) --build-arg=UID=$$(id -u) --build-arg=PYUSR=$$(id -un) --build-arg=PYGRP=$$(id -gn) .
+> docker buildx build $(if $(NC),--no-cache,) --platform=linux/amd64 --progress=plain -f $< --tag ${IMGTAG} --build-arg=PYUSR=$$(id -un) --build-arg=PYGRP=$$(id -gn) .
 
 clean:
 > docker rmi ${IMGTAG}
