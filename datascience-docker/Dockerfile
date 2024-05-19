@@ -89,6 +89,7 @@ mkdir -p /home/${USR}/.local
 aria2c https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh && bash ./linux-install.sh -p /home/${USR}/.local && rm -rf linux-install.sh
 (
 extensions=( arrow autocomplete aws azure excel fts httpfs iceberg icu inet json parquet postgres_scanner spatial sqlite_scanner substrait tpcds tpch )
+printf ".echo on\n"
 for ext in ${extensions[@]}; do
   printf "INSTALL '%s';\n" "${ext}"
 done
@@ -100,9 +101,9 @@ set -ex
 pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba
-MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba install --channel conda-forge --name base --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb
+MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
-printf 'micromamba activate\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
+printf 'micromamba activate ds\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
 EOT
 
 ## RUN <<EOT
