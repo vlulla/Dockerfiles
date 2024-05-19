@@ -17,11 +17,11 @@ apt-get install --yes -qq --auto-remove --no-install-recommends build-essential 
    sed gawk sqlite3 unzip zstd apt-utils less libcurl4-openssl-dev libxml2-dev libnode-dev libuv1-dev default-jdk rlwrap xserver-xorg-core aria2 wget \
    libudunits2-dev libgdal-dev libgeos-dev libhdf5-dev libproj-dev libnetcdf-dev libpq-dev cmake libglpk-dev shellcheck
 
-install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" xgboost arrow e1071 simstudy collapse rbenchmark fastmatch BH ggplot2 RSQLite sf rstan rstanarm
-
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
 unset DEBIAN_FRONTEND
 EOT
+
+RUN install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" xgboost arrow e1071 simstudy collapse rbenchmark fastmatch BH ggplot2 RSQLite sf rstan rstanarm duckdb
 
 RUN <<EOT
 set -ex
