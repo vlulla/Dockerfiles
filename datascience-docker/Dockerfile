@@ -110,10 +110,11 @@ RUN <<EOT
 set -ex
 curl -fsSL https://install.julialang.org | sh -s -- -y
 sed -i -E -e '/^path.+juliaup/s-^-postpath "${HOME}/.juliaup/bin" ## -g' /home/${USR}/.zshrc
+/home/${USR}/.juliaup/bin/julia -e 'using Pkg;[Pkg.add(p) for p in ["DataFrames","Distributions","JuMP","NLopt"]]'
 EOT
 
 RUN <<EOT
-/home/${USR}/.juliaup/bin/julia -e 'using Pkg;[Pkg.add(p) for p in ["DataFrames","Distributions","JuMP","NLopt"]]'
+mkdir -p /home/${USR}/.julia/config && ln -s /home/${USR}/code/config/startup.jl /home/${USR}/.julia/config/startup.jl
 EOT
 
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
