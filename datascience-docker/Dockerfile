@@ -110,7 +110,7 @@ RUN <<EOT
 set -ex
 curl -fsSL https://install.julialang.org | sh -s -- -y
 sed -i -E -e '/^path.+juliaup/s-^-postpath "${HOME}/.juliaup/bin" ## -g' /home/${USR}/.zshrc
-/home/${USR}/.juliaup/bin/julia -e 'using Pkg;[Pkg.add(p) for p in ["DataFrames","Distances","Distributions","GLM","GLMNet","JuMP","KernelDensity","Loess","MixedModels","MultivariateStats","NLopt","RDatasets","Rmath","StatsBase","StatsModels","Survival","TimeSeries"]]'
+/home/${USR}/.juliaup/bin/julia -e 'using Pkg;[Pkg.add(p) for p in ["DataFrames","Distances","Distributions","DuckDB","GLM","GLMNet","JuMP","KernelDensity","Loess","MixedModels","MultivariateStats","NLopt","RDatasets","Rmath","StatsBase","StatsModels","Survival","TimeSeries"]]'
 EOT
 
 RUN <<EOT
