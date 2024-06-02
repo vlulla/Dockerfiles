@@ -100,7 +100,7 @@ RUN <<EOT
 set -ex
 pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
-mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba
+mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba && ./bin/micromamba shell init -s bash -p /home/${USR}/micromamba
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb einops
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
 printf 'micromamba activate ds\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
