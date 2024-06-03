@@ -87,13 +87,7 @@ EOF
 ) >> /home/${USR}/.zshrc
 mkdir -p /home/${USR}/.local
 aria2c https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh && bash ./linux-install.sh -p /home/${USR}/.local && rm -rf linux-install.sh
-(
-extensions=( arrow autocomplete aws azure excel fts httpfs iceberg icu inet json parquet postgres_scanner spatial sqlite_scanner substrait tpcds tpch )
-printf ".echo on\n"
-for ext in ${extensions[@]}; do
-  printf "INSTALL '%s';\n" "${ext}"
-done
-) | duckdb
+duckdb -noheader -line -init /dev/null :memory: "select 'INSTALL '''||extension_name||''';' as stmt from duckdb_extensions() order by extension_name;" | sed -E -e 's-stmt = --g' -e '/(shell|jemalloc)/d' | duckdb :memory:
 EOT
 
 RUN <<EOT
