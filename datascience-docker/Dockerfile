@@ -22,6 +22,8 @@ unset DEBIAN_FRONTEND
 EOT
 
 RUN install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" xgboost arrow e1071 simstudy collapse rbenchmark fastmatch BH ggplot2 RSQLite sf rstan rstanarm duckdb
+RUN R --no-restore -e "install.packages(c('remotes'),dependencies=T)"
+RUN R --no-restore -e "remotes::install_github('stan-dev/posteriordb-r')"
 
 RUN <<EOT
 set -ex
