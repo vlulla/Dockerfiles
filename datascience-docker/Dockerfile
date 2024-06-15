@@ -114,6 +114,10 @@ RUN <<EOT
 mkdir -p /home/${USR}/.julia/config && ln -s /home/${USR}/code/config/startup.jl /home/${USR}/.julia/config/startup.jl
 EOT
 
+RUN <<EOT
+cd /home/${USR}/code && git clone https://github.com/vlulla/vl-utils.git
+mkdir -p /home/${USR}/code/R/ && ln -s /home/${USR}/code/vl-utils/r-utils.R /home/${USR}/code/R/utils.R
+EOT
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
 ## Might resolve timedatectl/systemd issues that I saw in R console on Vertex AI??
 ENTRYPOINT ["tini", "--"]
