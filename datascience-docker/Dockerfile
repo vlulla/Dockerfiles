@@ -2,7 +2,7 @@
 ARG VERSION=latest
 FROM rocker/r-ver:${VERSION}
 ARG VERSION
-LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
+LABEL maintainer="Vijay Lulla <vijaylulla@gmail.com>"
 
 SHELL ["/bin/bash", "-eux", "-o", "pipefail", "-c"]
 
@@ -98,7 +98,7 @@ set -ex
 pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba && ./bin/micromamba shell init -s bash -p /home/${USR}/micromamba
-MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb einops seaborn
+MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb einops seaborn black
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
 printf 'micromamba activate ds\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
 EOT
@@ -117,6 +117,7 @@ EOT
 RUN <<EOT
 cd /home/${USR}/code && git clone https://github.com/vlulla/vl-utils.git
 mkdir -p /home/${USR}/code/R/ && ln -s /home/${USR}/code/vl-utils/r-utils.R /home/${USR}/code/R/utils.R
+mkdir -p /home/${USR}/.ipython/profile_default/startup && ln -s /home/${USR}/code/vl-utils/python-utils.py /home/${USR}/.ipython/profile_default/startup/00-python-utils.py
 EOT
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
 ## Might resolve timedatectl/systemd issues that I saw in R console on Vertex AI??
