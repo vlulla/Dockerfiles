@@ -118,6 +118,7 @@ RUN <<EOT
 cd /home/${USR}/code && git clone https://github.com/vlulla/vl-utils.git
 mkdir -p /home/${USR}/code/R/ && ln -s /home/${USR}/code/vl-utils/r-utils.R /home/${USR}/code/R/utils.R
 mkdir -p /home/${USR}/.ipython/profile_default/startup && ln -s /home/${USR}/code/vl-utils/python-utils.py /home/${USR}/.ipython/profile_default/startup/00-python-utils.py
+R --no-restore --no-save -e "with(list(l=.libPaths()),install.packages(c('fpp3'),dependencies=T,lib=l[[length(l)]]))"
 EOT
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
 ## Might resolve timedatectl/systemd issues that I saw in R console on Vertex AI??
