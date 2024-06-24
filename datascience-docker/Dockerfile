@@ -15,7 +15,7 @@ apt-get update -qq --yes
 apt-get install --yes -qq --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils \
    git jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps zsh parallel lua5.4 graphviz \
    sed gawk sqlite3 unzip zstd apt-utils less libcurl4-openssl-dev libxml2-dev libnode-dev libuv1-dev default-jdk rlwrap xserver-xorg-core aria2 wget \
-   libudunits2-dev libgdal-dev libgeos-dev libhdf5-dev libproj-dev libnetcdf-dev libpq-dev cmake libglpk-dev shellcheck
+   libudunits2-dev libgdal-dev libgeos-dev libhdf5-dev libproj-dev libnetcdf-dev libpq-dev cmake libglpk-dev shellcheck tk
 
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
 unset DEBIAN_FRONTEND
@@ -24,7 +24,7 @@ EOT
 RUN install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" xgboost arrow e1071 simstudy collapse rbenchmark fastmatch BH ggplot2 RSQLite sf rstan rstanarm duckdb
 RUN R --no-restore -e "install.packages(c('remotes'),dependencies=T)"
 RUN R --no-restore -e "remotes::install_github('stan-dev/posteriordb-r')"
-RUN R --no-restore -e "install.packages(c('devtools','mvtnorm','brms','dagitty'),dependencies=T)"
+RUN R --no-restore -e "install.packages(c('devtools','mvtnorm','brms','dagitty','fpp3'),dependencies=T)"
 
 RUN <<EOT
 set -ex
@@ -118,7 +118,6 @@ RUN <<EOT
 cd /home/${USR}/code && git clone https://github.com/vlulla/vl-utils.git
 mkdir -p /home/${USR}/code/R/ && ln -s /home/${USR}/code/vl-utils/r-utils.R /home/${USR}/code/R/utils.R
 mkdir -p /home/${USR}/.ipython/profile_default/startup && ln -s /home/${USR}/code/vl-utils/python-utils.py /home/${USR}/.ipython/profile_default/startup/00-python-utils.py
-R --no-restore --no-save -e "with(list(l=.libPaths()),install.packages(c('fpp3'),dependencies=T,lib=l[[length(l)]]))"
 EOT
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
 ## Might resolve timedatectl/systemd issues that I saw in R console on Vertex AI??
