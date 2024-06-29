@@ -66,7 +66,6 @@ cd code && git clone https://github.com/vlulla/config.git
 
 printf '[[ -f "/home/%s/code/config/zshrc" ]] && source "/home/%s/code/config/zshrc"\n' ${USR} ${USR} > /home/${USR}/.zshrc
 printf 'source /home/%s/code/config/vimrc\n' "${USR}" > /home/${USR}/.vimrc
-ln -s /home/${USR}/code/config/Rprofile /home/${USR}/.Rprofile
 ln -s /home/${USR}/code/config/sqliterc /home/${USR}/.sqliterc
 ln -s /home/${USR}/code/config/duckdbrc /home/${USR}/.duckdbrc
 ln -s /home/${USR}/code/config/psqlrc /home/${USR}/.psqlrc
@@ -116,6 +115,13 @@ mkdir -p /home/${USR}/.julia/config && ln -s /home/${USR}/code/config/startup.jl
 EOT
 
 RUN <<EOT
+## R from container does not have browser/viewer for R's `?` or `help` command requires setting help_type option to "text"
+( cat <<EOF
+with(list(profile_fname="~/code/config/Rprofile"),if(file.exists(profile_fname)) source(profile_fname))
+options(help_type="text")
+EOF
+) >> /home/${USR}/.Rprofile
+
 cd /home/${USR}/code && git clone https://github.com/vlulla/vl-utils.git
 mkdir -p /home/${USR}/code/R/ && ln -s /home/${USR}/code/vl-utils/r-utils.R /home/${USR}/code/R/utils.R
 mkdir -p /home/${USR}/.ipython/profile_default/startup && ln -s /home/${USR}/code/vl-utils/python-utils.py /home/${USR}/.ipython/profile_default/startup/00-python-utils.py
