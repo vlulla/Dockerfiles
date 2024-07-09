@@ -11,6 +11,7 @@ RUN <<EOT
 set -ex
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq --yes
+apt-get upgrade --yes
 
 apt-get install --yes -qq --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils \
    git jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps zsh parallel lua5.4 graphviz \
