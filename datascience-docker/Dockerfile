@@ -27,7 +27,12 @@ RUN R --no-restore -e "install.packages(c('remotes'),dependencies=T)"
 RUN R --no-restore -e "remotes::install_github('stan-dev/posteriordb-r')"
 RUN R --no-restore -e "install.packages(c('devtools','mvtnorm','brms','dagitty','fpp3','bsts'),dependencies=T)"
 RUN R --no-restore -e "remotes::install_github('facebook/prophet@*release',subdir='R')"
-RUN R --no-restore -e "remotes::install_github(c('stan-dev/cmdstanr','rmcelreath/rethinking'),dependencies=T);cmdstanr::install_cmdstan()"
+RUN R --no-restore -e "remotes::install_github(c('stan-dev/cmdstanr','rmcelreath/rethinking'),dependencies=T)"
+RUN <<EOT
+mkdir -p /opt/cmdstan
+R --no-restore -e "cmdstanr::install_cmdstan(dir='/opt/cmdstan')"
+EOT
+ENV CMDSTAN="/opt/cmdstan"
 
 RUN <<EOT
 set -ex
