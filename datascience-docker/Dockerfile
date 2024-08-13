@@ -28,11 +28,13 @@ RUN R --no-restore -e "remotes::install_github('stan-dev/posteriordb-r')"
 RUN R --no-restore -e "install.packages(c('devtools','mvtnorm','brms','dagitty','fpp3','bsts'),dependencies=T)"
 RUN R --no-restore -e "remotes::install_github('facebook/prophet@*release',subdir='R')"
 RUN R --no-restore -e "remotes::install_github(c('stan-dev/cmdstanr','rmcelreath/rethinking'),dependencies=T)"
-RUN <<EOT
-mkdir -p /opt/cmdstan
-R --no-restore -e "cmdstanr::install_cmdstan(dir='/opt/cmdstan')"
-EOT
-ENV CMDSTAN="/opt/cmdstan"
+## RUN <<EOT
+## mkdir -p /opt/cmdstan
+## R --no-restore -e "cmdstanr::install_cmdstan(dir='/opt/cmdstan')"
+## EOT
+## ENV CMDSTAN="/opt/cmdstan"
+## RUN R --no-save --no-restore -e "cmdstanr::rebuild_cmdstan()"
+## RUN cd /opt/cmdstan/cmdstan-2.35.0 && make examples/bernoulli/bernoulli
 
 RUN <<EOT
 set -ex
@@ -106,21 +108,22 @@ pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba && ./bin/micromamba shell init -s bash -p /home/${USR}/micromamba
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba config set extract_threads 1 ## needed for macos with ARM processor ## see https://github.com/mamba-org/micromamba-docker/issues/349
-MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb einops seaborn black
+MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb einops seaborn black cmdstan
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
 printf 'micromamba activate ds\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
 EOT
+ENV CMDSTAN=/home/${USR}/micromamba/envs/ds/bin/cmdstan
 
-RUN <<EOT
-set -ex
-curl -fsSL https://install.julialang.org | sh -s -- -y
-sed -i -E -e '/^path.+juliaup/s-^-postpath "${HOME}/.juliaup/bin" ## -g' /home/${USR}/.zshrc
-/home/${USR}/.juliaup/bin/julia -e 'using Pkg;[Pkg.add(p) for p in ["DataFrames","Distances","Distributions","DuckDB","GLM","GLMNet","JuMP","KernelDensity","Loess","MixedModels","MultivariateStats","NLopt","RDatasets","Rmath","StatsBase","StatsModels","Survival","TimeSeries"]]'
-EOT
-
-RUN <<EOT
-mkdir -p /home/${USR}/.julia/config && ln -s /home/${USR}/code/config/startup.jl /home/${USR}/.julia/config/startup.jl
-EOT
+## RUN <<EOT
+## set -ex
+## curl -fsSL https://install.julialang.org | sh -s -- -y
+## sed -i -E -e '/^path.+juliaup/s-^-postpath "${HOME}/.juliaup/bin" ## -g' /home/${USR}/.zshrc
+## /home/${USR}/.juliaup/bin/julia -e 'using Pkg;[Pkg.add(p) for p in ["DataFrames","Distances","Distributions","DuckDB","GLM","GLMNet","JuMP","KernelDensity","Loess","MixedModels","MultivariateStats","NLopt","RDatasets","Rmath","StatsBase","StatsModels","Survival","TimeSeries"]]'
+## EOT
+##
+## RUN <<EOT
+## mkdir -p /home/${USR}/.julia/config && ln -s /home/${USR}/code/config/startup.jl /home/${USR}/.julia/config/startup.jl
+## EOT
 
 RUN <<EOT
 ## R from container does not have browser/viewer for R's `?` or `help` command requires setting help_type option to "text"
