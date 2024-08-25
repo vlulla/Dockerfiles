@@ -2,5 +2,5 @@
 ARG VERSION=latest
 FROM pandoc/latex:${VERSION}
 ARG VERSION
-LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
+LABEL maintainer="Vijay Lulla <vijaylulla@gmail.com>"
 RUN tlmgr install koma-script
