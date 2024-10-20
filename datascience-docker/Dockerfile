@@ -107,7 +107,7 @@ RUN <<EOT
 set -ex
 pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
-mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init -s zsh -p /home/${USR}/micromamba && ./bin/micromamba shell init -s bash -p /home/${USR}/micromamba
+mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init --shell zsh --root-prefix=/home/${USR}/micromamba && ./bin/micromamba shell init --shell bash --root-prefix=/home/${USR}/micromamba
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba config set extract_threads 1 ## needed for macos with ARM processor ## see https://github.com/mamba-org/micromamba-docker/issues/349
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb einops seaborn black cmdstan sqlglot
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
