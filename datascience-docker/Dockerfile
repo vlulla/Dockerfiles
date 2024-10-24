@@ -72,7 +72,7 @@ USER ${USR}
 
 RUN <<EOT
 set -ex
-mkdir -p code 
+mkdir -p code
 cd code && git clone https://github.com/vlulla/config.git
 
 printf '[[ -f "/home/%s/code/config/zshrc" ]] && source "/home/%s/code/config/zshrc"\n' ${USR} ${USR} > /home/${USR}/.zshrc
@@ -110,6 +110,7 @@ curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/mi
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init --shell zsh --root-prefix=/home/${USR}/micromamba && ./bin/micromamba shell init --shell bash --root-prefix=/home/${USR}/micromamba
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba config set extract_threads 1 ## needed for macos with ARM processor ## see https://github.com/mamba-org/micromamba-docker/issues/349
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb einops seaborn black cmdstan sqlglot
+MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba run --name ds pip install kuzu
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
 printf 'micromamba activate ds\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
 EOT
@@ -137,6 +138,12 @@ EOF
 cd /home/${USR}/code && git clone https://github.com/vlulla/vl-utils.git
 mkdir -p /home/${USR}/code/R/ && ln -s /home/${USR}/code/vl-utils/r-utils.R /home/${USR}/code/R/utils.R
 mkdir -p /home/${USR}/.ipython/profile_default/startup && ln -s /home/${USR}/code/vl-utils/python-utils.py /home/${USR}/.ipython/profile_default/startup/00-python-utils.py
+EOT
+
+RUN <<EOT
+cd /home/${USR}/.local/bin
+curl -sSLO https://github.com/kuzudb/kuzu/releases/download/v0.6.1/kuzu_cli-linux-x86_64.tar.gz
+tar xf kuzu_cli-linux-x86_64.tar.gz && rm -rf kuzu_cli-linux-x86_64.tar.gz
 EOT
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
 ## Might resolve timedatectl/systemd issues that I saw in R console on Vertex AI??
