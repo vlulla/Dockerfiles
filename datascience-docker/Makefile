@@ -12,7 +12,8 @@ MAKEFLAGS += --no-builtin-rules
 
 IMGTAG=vl-ds
 ifeq ($(shell uname -s), Linux)
-	BUILD_ARGS=--build-arg UID=$$(id -u) --build-arg USR=$$(id -un) --build-arg GID=$$(id -g) --build-arg GRP=$$(id -gn)
+	## BUILD_ARGS=--build-arg UID=$$(id -u) --build-arg USR=$$(id -un) --build-arg GID=$$(id -g) --build-arg GRP=$$(id -gn)
+	BUILD_ARGS=
 else
 	BUILD_ARGS=
 endif

@@ -51,9 +51,9 @@ apt-get update -qq --yes
 apt-get install --yes osquery
 EOT
 
-ARG UID=${UID:-1000}
+ARG UID=${UID:-1010}
 ARG USR=${USR:-usr}
-ARG GID=${GID:-1000}
+ARG GID=${GID:-1010}
 ARG GRP=${GRP:-grp}
 
 ## ## See the rules that ADD obeys at https://docs.docker.com/engine/reference/builder/#add
@@ -100,7 +100,7 @@ EOF
 ) >> /home/${USR}/.zshrc
 mkdir -p /home/${USR}/.local
 aria2c https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh && bash ./linux-install.sh -p /home/${USR}/.local && rm -rf linux-install.sh
-duckdb -noheader -line -init /dev/null :memory: "select 'INSTALL '''||extension_name||''';' as stmt from duckdb_extensions() order by extension_name;" | sed -E -e 's-stmt = --g' -e '/(shell|jemalloc)/d' | duckdb :memory:
+duckdb -noheader -line -init /dev/null :memory: "select 'INSTALL '''||extension_name||''';' as stmt from duckdb_extensions() order by extension_name;" | sed -E -e 's-stmt = --g' -e '/(shell|jemalloc|delta)/d' | duckdb :memory:
 EOT
 
 RUN <<EOT
