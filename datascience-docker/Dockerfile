@@ -35,7 +35,7 @@ RUN R --no-restore -e "remotes::install_github(c('stan-dev/cmdstanr','rmcelreath
 ## ENV CMDSTAN="/opt/cmdstan"
 ## RUN R --no-save --no-restore -e "cmdstanr::rebuild_cmdstan()"
 ## RUN cd /opt/cmdstan/cmdstan-2.35.0 && make examples/bernoulli/bernoulli
-RUN install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" TTR scoringRules
+RUN install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" TTR scoringRules lightgbm
 
 RUN <<EOT
 set -ex
