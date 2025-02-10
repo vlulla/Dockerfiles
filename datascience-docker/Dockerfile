@@ -40,7 +40,7 @@ RUN install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" TTR
 RUN <<EOT
 set -ex
 pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pushd tree && make && make install && popd && rm -rf tree && popd
-pushd /tmp && aria2c https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
+pushd /tmp && aria2c https://github.com/duckdb/duckdb/releases/download/v1.2.0/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
 EOT
 
 RUN <<EOT
