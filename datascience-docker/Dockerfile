@@ -145,6 +145,10 @@ cd /home/${USR}/.local/bin
 curl -sSLO https://github.com/kuzudb/kuzu/releases/download/v0.6.1/kuzu_cli-linux-x86_64.tar.gz
 tar xf kuzu_cli-linux-x86_64.tar.gz && rm -rf kuzu_cli-linux-x86_64.tar.gz
 EOT
+
+RUN <<EOT
+mkdir -p /home/${USR}/code/k && cd /home/${USR}/code/k && git clone https://codeberg.org/ngn/k ngn-k.git && cd ngn-k.git && make && cp ./k /home/${USR}/.local/bin/
+EOT
 ## ## Understanding interaction between ENTRYPOINT and CMD is helpful. https://docs.docker.com/engine/reference/builder/#understand-how-cmd-and-entrypoint-interact
 ## Might resolve timedatectl/systemd issues that I saw in R console on Vertex AI??
 ENTRYPOINT ["tini", "--"]
