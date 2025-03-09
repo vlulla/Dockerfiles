@@ -40,7 +40,7 @@ RUN install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" TTR
 RUN <<EOT
 set -ex
 pushd /tmp && git clone https://gitlab.com/OldManProgrammer/unix-tree tree && pushd tree && make && make install && popd && rm -rf tree && popd
-pushd /tmp && aria2c https://github.com/duckdb/duckdb/releases/download/v1.2.0/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
+pushd /tmp && aria2c https://github.com/duckdb/duckdb/releases/download/v1.2.1/duckdb_cli-linux-amd64.zip && unzip duckdb_cli-linux-amd64.zip -d /usr/local/bin && rm -rf duckdb_cli-linux-amd64.zip
 EOT
 
 RUN <<EOT
@@ -100,7 +100,7 @@ EOF
 ) >> /home/${USR}/.zshrc
 mkdir -p /home/${USR}/.local
 aria2c https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh && bash ./linux-install.sh -p /home/${USR}/.local && rm -rf linux-install.sh
-duckdb -list -noheader -init /dev/null :memory: "select 'INSTALL '''||extension_name||''';' as stmt from duckdb_extensions() where extension_name not in ('shell','jemalloc','delta') order by extension_name;" 2>/dev/null | duckdb :memory:
+duckdb -list -noheader -init /dev/null :memory: "select 'INSTALL '''||extension_name||''';' as stmt from duckdb_extensions() where extension_name not in ('shell','jemalloc','delta','arrow','vss') order by extension_name;" 2>/dev/null | duckdb -init /dev/null :memory:
 EOT
 
 RUN <<EOT
