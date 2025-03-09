@@ -24,8 +24,8 @@ RUN apt-get install -y iproute2 net-tools iputils-ping
 RUN <<EOT
 set -ex
 pushd /tmp
-git clone https://git.osgeo.org/gitea/rttopo/librttopo.git
-cd librttopo
+git clone https://gitlab.com/rttopo/rttopo.git
+cd rttopo
 ./autogen.sh
 ./configure
 make -j $(( $(nproc) - 2))
