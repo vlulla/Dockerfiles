@@ -100,7 +100,7 @@ EOF
 ) >> /home/${USR}/.zshrc
 mkdir -p /home/${USR}/.local
 aria2c https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh && bash ./linux-install.sh -p /home/${USR}/.local && rm -rf linux-install.sh
-duckdb -list -noheader -init /dev/null :memory: "select 'INSTALL '''||extension_name||''';' as stmt from duckdb_extensions() where extension_name not in ('shell','jemalloc','delta','arrow','vss') order by extension_name;" 2>/dev/null | duckdb -init /dev/null :memory:
+duckdb -list -noheader -init /dev/null -s "select 'INSTALL '||extension_name||';' as stmt from duckdb_extensions() where not installed and extension_name not in ('arrow') order by extension_name;" :memory: 2>/dev/null | duckdb -init /dev/null :memory:
 EOT
 
 RUN <<EOT
