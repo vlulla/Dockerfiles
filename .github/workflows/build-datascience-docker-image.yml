@@ -1,5 +1,6 @@
 name: datascience
 on: 
+  workflow_dispatch:
   push: { "branches": [ "main" ], "paths": [ "datascience-docker/**" ] }
 jobs:
   build-image:
