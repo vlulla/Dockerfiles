@@ -1,5 +1,6 @@
 name: pandoc-with-komascript
 on: 
+  workflow_dispatch:
   push: { "branches": [ "main" ], "paths": [ "pandoc-docker/**" ] }
 jobs:
   build-image:

@@ -1,5 +1,6 @@
 name: geospatial-python
 on: 
+  workflow_dispatch:
   push:
     branhces:
       - main

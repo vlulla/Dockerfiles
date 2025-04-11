@@ -1,5 +1,6 @@
 name: erlang
 on: 
+  workflow_dispatch:
   push: { "branches": [ "main" ], "paths": [ "erlang/**" ] }
 jobs:
   build-image:
