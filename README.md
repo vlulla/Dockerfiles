@@ -10,3 +10,9 @@ Dockerfiles
 [![pandoc-with-komascript](https://github.com/vlulla/Dockerfiles/actions/workflows/build-pandoc-komascript-image.yml/badge.svg)](https://github.com/vlulla/Dockerfiles/actions/workflows/build-pandoc-komascript-image.yml)
 
 My collection of Dockerfiles!
+
+Run containers with --user="$(id -u):$(id -g)" to prevent privilege escalation.
+[This
+link](https://jtreminio.com/blog/running-docker-containers-as-current-host-user/)
+contains a good description of how to set up users for use in containers that do
+not cause privilege escalation risks.
