@@ -2,7 +2,7 @@
 ARG VERSION=latest
 FROM rocker/r-base:${VERSION}
 ARG VERSION
-LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
+LABEL maintainer="Vijay Lulla <vijaylulla@gmail.com>"
 
 SHELL ["/bin/bash", "-eux", "-o", "pipefail", "-c"]
 
