@@ -139,7 +139,7 @@ EOT
 
 RUN <<EOT
 cd /home/${USR}/.local/bin
-curl -sSLO https://github.com/kuzudb/kuzu/releases/download/v0.6.1/kuzu_cli-linux-x86_64.tar.gz
+curl -sSLO https://github.com/kuzudb/kuzu/releases/download/v0.10.0/kuzu_cli-linux-x86_64.tar.gz
 tar xf kuzu_cli-linux-x86_64.tar.gz && rm -rf kuzu_cli-linux-x86_64.tar.gz
 EOT
 
