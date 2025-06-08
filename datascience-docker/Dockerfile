@@ -109,7 +109,7 @@ pushd /home/${USR}/.local
 curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 mkdir -p /home/${USR}/micromamba && ./bin/micromamba shell init --shell zsh --root-prefix=/home/${USR}/micromamba && ./bin/micromamba shell init --shell bash --root-prefix=/home/${USR}/micromamba
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba config set extract_threads 1 ## needed for macos with ARM processor ## see https://github.com/mamba-org/micromamba-docker/issues/349
-MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb einops seaborn black cmdstan sqlglot xhistogram bottleneck numexpr numba
+MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba create --channel conda-forge --name ds --yes ipython numpy pandas pyarrow scikit-learn polars hypothesis pytest python-duckdb einops seaborn black cmdstan sqlglot xhistogram bottleneck numexpr numba pytorch
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba run --name ds pip install kuzu
 MAMBA_ROOT_PREFIX=/home/${USR}/micromamba /home/${USR}/.local/bin/micromamba clean --all --yes
 printf 'micromamba activate ds\n' | tee -a /home/${USR}/.zshrc >> /home/${USR}/.bashrc
