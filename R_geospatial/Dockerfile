@@ -31,7 +31,7 @@ RUN <<EOT
   sed -i -e '/options(repos = r)/ s_(\([^)]\+\))_(\1, Ncpus = parallel::detectCores() - 2)_g' /usr/lib/R/etc/Rprofile.site
 
   install2.r --error --skipinstalled BiocManager && installBioc.r BiocVersion
-  install2.r --error --repos "https://packagemanager.posit.co/cran/__linux__/noble/latest" --skipinstalled devtools Rcpp RcppArmadillo ggplot2 rbenchmark
+  install2.r --error --repos "https://packagemanager.posit.co/cran/__linux__/noble/latest" --skipinstalled devtools Rcpp RcppArmadillo ggplot2 rbenchmark httr
   installBioc.r graph EBImage
   install2.r --error --repos "https://packagemanager.posit.co/cran/__linux__/noble/latest" --skipinstalled jsonlite stringi stringr data.table sqldf igraph simstudy ggrepel pbapply \
           caret e1071 gbm glmnet nnet xgboost randomForest arrow classInt fst RSQLite sf sp raster terra lidR
