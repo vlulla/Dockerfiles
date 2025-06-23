@@ -19,7 +19,7 @@ RUN <<EOT
    wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
    echo "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" | tee -a /etc/apt/sources.list.d/R.list
    apt-get -qq update
-   apt-get install -qq --yes --no-install-recommends libcurl4-openssl-dev libssl-dev libxml2-dev libudunits2-dev libatlas3-base libgdal-dev libfftw3-dev gdal-bin libgit2-dev \
+   apt-get install -qq --yes --no-install-recommends cmake libcurl4-openssl-dev libssl-dev libxml2-dev libudunits2-dev libatlas3-base libgdal-dev libfftw3-dev gdal-bin libgit2-dev \
      r-base r-base-dev r-recommended r-cran-docopt littler libfontconfig1-dev libharfbuzz-dev libfribidi-dev
   ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r
   ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r
