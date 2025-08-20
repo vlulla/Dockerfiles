@@ -20,9 +20,9 @@ EOT
 WORKDIR /tmp
 RUN <<EOT
 set -ex
-curl -SL -O https://lilypond.org/download/source/v2.24/lilypond-2.24.2.tar.gz
-tar xf lilypond-2.24.2.tar.gz
-cd lilypond-2.24.2
+curl -SL -O https://lilypond.org/download/source/v2.24/lilypond-2.24.4.tar.gz
+tar xf lilypond-2.24.4.tar.gz
+cd lilypond-2.24.4
 mkdir -p build
 cd build
 ../autogen.sh --noconfigure
@@ -30,7 +30,7 @@ cd build
 make -j $(( $(nproc) - 2)) all
 make install
 cd /tmp
-rm -rf lilypond-2.24.2 lilypond-2.24.2.tar.gz
+rm -rf lilypond-2.24.4 lilypond-2.24.4.tar.gz
 EOT
 
 ## RUN apt-get install -y iproute2 net-tools iputils-ping
