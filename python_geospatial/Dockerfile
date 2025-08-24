@@ -39,7 +39,7 @@ RUN <<EOT
     mkdir -p ${HOME}/{.local,micromamba} && pushd ${HOME}/.local
     curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
     ${HOME}/.local/bin/micromamba shell init --shell bash --root-prefix ${HOME}/micromamba
-    MAMBA_ROOT_PREFIX=${HOME}/micromamba ${HOME}/.local/bin/micromamba create --channel conda-forge --name geo --yes geopandas xarray rasterio dask distributed pyarrow pygeos polars
+    MAMBA_ROOT_PREFIX=${HOME}/micromamba ${HOME}/.local/bin/micromamba create --channel conda-forge --name geo --yes geopandas xarray rasterio dask distributed pyarrow pygeos polars numba bottleneck matplotlib seaborn duckdb
 EOT
 
 ENTRYPOINT ["tini","--"]
