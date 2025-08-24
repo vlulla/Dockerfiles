@@ -5,7 +5,7 @@ FROM ubuntu:${VERSION}
 SHELL [ "/bin/bash", "-eo","pipefail", "-c"]
 
 LABEL MAINTAINER="Vijay Lulla <vijaylulla@gmail.com>"
-ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN <<EOT
 apt-get update --yes

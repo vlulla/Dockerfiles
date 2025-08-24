@@ -5,11 +5,11 @@ ARG VERSION
 LABEL maintainer="Vijay Lulla <vijaylulla@gmail.com>"
 
 SHELL ["/bin/bash", "-eux", "-o", "pipefail", "-c"]
+ARG DEBIAN_FRONTEND=noninteractive
 
 ## Useful tools for all of my exploratory work.
 RUN <<EOT
 set -ex
-export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq --yes
 apt-get upgrade --yes
 
@@ -19,7 +19,6 @@ apt-get install --yes -qq --auto-remove --no-install-recommends build-essential 
    libudunits2-dev libgdal-dev libgeos-dev libhdf5-dev libproj-dev libnetcdf-dev libpq-dev cmake libglpk-dev shellcheck tk libgl1-mesa-dev libglu1-mesa-dev
 
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
-unset DEBIAN_FRONTEND
 EOT
 
 RUN install2.r --error --skipinstalled --skipmissing -n "$(( $(nproc) - 2))" xgboost arrow e1071 simstudy fastverse rbenchmark fastmatch BH ggplot2 RSQLite sf rstan rstanarm duckdb tidyverse rgl caret

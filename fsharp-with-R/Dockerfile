@@ -5,17 +5,16 @@ ARG VERSION
 LABEL maintainer="Vijay Lulla <vijaylulla@gmail.com>"
 
 SHELL ["/bin/bash", "-eux", "-o", "pipefail", "-c"]
+ARG DEBIAN_FRONTEND=noninteractive
 
 ## Useful tools for all of my exploratory work.
 RUN <<EOT
 set -ex
-export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq --yes
 
 apt-get install --yes --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils git tree jq htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps
 
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
-unset DEBIAN_FRONTEND
 EOT
 
 RUN <<EOT
