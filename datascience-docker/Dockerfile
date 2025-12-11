@@ -16,7 +16,7 @@ apt-get upgrade --yes
 apt-get install --yes -qq --auto-remove --no-install-recommends build-essential ca-certificates tini coreutils findutils \
    jq git htop vim ripgrep curl gnupg strace psmisc iputils-ping tcpdump traceroute procps zsh parallel lua5.4 graphviz \
    sed gawk sqlite3 unzip zstd apt-utils less libcurl4-openssl-dev libxml2-dev libnode-dev libuv1-dev default-jdk rlwrap xserver-xorg-core aria2 wget \
-   libudunits2-dev libgdal-dev libgeos-dev libhdf5-dev libproj-dev libnetcdf-dev libpq-dev cmake libglpk-dev shellcheck tk libgl1-mesa-dev libglu1-mesa-dev lld sysstat
+   libudunits2-dev libgdal-dev libgeos-dev libhdf5-dev libproj-dev libnetcdf-dev libpq-dev cmake libglpk-dev shellcheck tk libgl1-mesa-dev libglu1-mesa-dev lld sysstat pkg-config
 
 apt-get autoclean && rm -rf /var/lib/apt/lists/*
 EOT
