@@ -8,6 +8,9 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname='btree_gist') THEN
     CREATE EXTENSION IF NOT EXISTS btree_gist;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname='unaccent') THEN
+    CREATE EXTENSION IF NOT EXISTS unaccent;
+  END IF;
 END;
 $$ LANGUAGE PLPGSQL;
 
@@ -112,17 +115,21 @@ GRANT ALL ON SCHEMA pgstac TO pgstac_ingest;
 ALTER DEFAULT PRIVILEGES IN SCHEMA pgstac GRANT ALL ON TABLES TO pgstac_ingest;
 ALTER DEFAULT PRIVILEGES IN SCHEMA pgstac GRANT ALL ON FUNCTIONS TO pgstac_ingest;
 
+SET ROLE pgstac_admin;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_admin IN SCHEMA pgstac GRANT SELECT ON TABLES TO pgstac_read;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_admin IN SCHEMA pgstac GRANT USAGE ON TYPES TO pgstac_read;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_admin IN SCHEMA pgstac GRANT ALL ON SEQUENCES TO pgstac_read;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_admin IN SCHEMA pgstac GRANT ALL ON TABLES TO pgstac_ingest;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_admin IN SCHEMA pgstac GRANT ALL ON FUNCTIONS TO pgstac_ingest;
+RESET ROLE;
 
+SET ROLE pgstac_ingest;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_ingest IN SCHEMA pgstac GRANT SELECT ON TABLES TO pgstac_read;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_ingest IN SCHEMA pgstac GRANT USAGE ON TYPES TO pgstac_read;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_ingest IN SCHEMA pgstac GRANT ALL ON SEQUENCES TO pgstac_read;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_ingest IN SCHEMA pgstac GRANT ALL ON TABLES TO pgstac_ingest;
 ALTER DEFAULT PRIVILEGES FOR ROLE pgstac_ingest IN SCHEMA pgstac GRANT ALL ON FUNCTIONS TO pgstac_ingest;
+RESET ROLE;
 
 SET SEARCH_PATH TO pgstac, public;
 SET ROLE pgstac_admin;
@@ -621,7 +628,12 @@ BEGIN
     THEN
         RETURN j;
     ELSE
-        includes := includes || '["id","collection"]'::jsonb;
+        includes := includes || (
+            CASE WHEN j ? 'collection' THEN
+                '["id","collection"]'
+            ELSE
+                '["id"]'
+            END)::jsonb;
         FOR path IN SELECT explode_dotpaths(includes) LOOP
             outj := jsonb_set_nested(outj, path, j #> path);
         END LOOP;
@@ -1063,12 +1075,17 @@ DECLARE
     q RECORD;
     path_elements text[];
 BEGIN
+    dotpath := replace(dotpath, 'properties.', '');
+    IF dotpath = 'start_datetime' THEN
+        dotpath := 'datetime';
+    END IF;
     IF dotpath IN ('id', 'geometry', 'datetime', 'end_datetime', 'collection') THEN
         path := dotpath;
         expression := dotpath;
         wrapper := NULL;
         RETURN;
     END IF;
+
     SELECT * INTO q FROM queryables
         WHERE
             name=dotpath
@@ -1304,7 +1321,7 @@ BEGIN
             rebuildindexes,
             idxconcurrently
         );
-        RAISE NOTICE 'Q: %s', q;
+        RAISE NOTICE 'Q: %', q;
         RETURN NEXT q;
     END LOOP;
     RETURN;
@@ -1743,7 +1760,9 @@ INSERT INTO cql2_ops (op, template, types) VALUES
     ('between', '%s BETWEEN %s AND %s', NULL),
     ('isnull', '%s IS NULL', NULL),
     ('upper', 'upper(%s)', NULL),
-    ('lower', 'lower(%s)', NULL)
+    ('lower', 'lower(%s)', NULL),
+    ('casei', 'upper(%s)', NULL),
+    ('accenti', 'unaccent(%s)', NULL)
 ON CONFLICT (op) DO UPDATE
     SET
         template = EXCLUDED.template
@@ -1774,7 +1793,7 @@ BEGIN
         FOR prop IN
             SELECT DISTINCT p->>0
             FROM jsonb_path_query(j, 'strict $.**.property') p
-            WHERE p->>0 NOT IN ('id', 'datetime', 'end_datetime', 'collection')
+            WHERE p->>0 NOT IN ('id', 'datetime', 'geometry', 'end_datetime', 'collection')
         LOOP
             IF (queryable(prop)).nulled_wrapper IS NULL THEN
                 RAISE EXCEPTION 'Term % is not found in queryables.', prop;
@@ -1845,8 +1864,8 @@ BEGIN
     IF op = 'between' THEN
         args = jsonb_build_array(
             args->0,
-            args->1->0,
-            args->1->1
+            args->1,
+            args->2
         );
     END IF;
 
@@ -2353,23 +2372,19 @@ CREATE OR REPLACE FUNCTION collection_bbox(id text) RETURNS jsonb AS $$
 $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE SET SEARCH_PATH TO pgstac, public;
 
 CREATE OR REPLACE FUNCTION collection_temporal_extent(id text) RETURNS jsonb AS $$
-    SELECT to_jsonb(array[array[min(datetime)::text, max(datetime)::text]])
+    SELECT to_jsonb(array[array[min(datetime), max(datetime)]])
     FROM items WHERE collection=$1;
 ;
 $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE SET SEARCH_PATH TO pgstac, public;
 
 CREATE OR REPLACE FUNCTION update_collection_extents() RETURNS VOID AS $$
-UPDATE collections SET
-    content = content ||
-    jsonb_build_object(
-        'extent', jsonb_build_object(
-            'spatial', jsonb_build_object(
-                'bbox', collection_bbox(collections.id)
-            ),
-            'temporal', jsonb_build_object(
-                'interval', collection_temporal_extent(collections.id)
-            )
-        )
+UPDATE collections
+    SET content = jsonb_set_lax(
+        content,
+        '{extent}'::text[],
+        collection_extent(id, FALSE),
+        true,
+        'use_json_null'
     )
 ;
 $$ LANGUAGE SQL;
@@ -2395,62 +2410,119 @@ CREATE OR REPLACE FUNCTION constraint_tstzrange(expr text) RETURNS tstzrange AS 
     ;
 $$ LANGUAGE SQL IMMUTABLE PARALLEL SAFE STRICT;
 
-CREATE OR REPLACE FUNCTION dt_constraint(coid oid, OUT dt tstzrange, OUT edt tstzrange) RETURNS RECORD AS $$
+CREATE OR REPLACE FUNCTION get_tstz_constraint(reloid oid, colname text) RETURNS tstzrange AS $$
 DECLARE
-    expr text := pg_get_constraintdef(coid);
-    matches timestamptz[];
+    expr text := NULL;
+    m text[];
+    ts_lower timestamptz := NULL;
+    ts_upper timestamptz := NULL;
+    lower_inclusive text := '[';
+    upper_inclusive text := ']';
+    ts timestamptz;
 BEGIN
-    IF expr LIKE '%NULL%' THEN
-        dt := tstzrange(null::timestamptz, null::timestamptz);
-        edt := tstzrange(null::timestamptz, null::timestamptz);
-        RETURN;
+    SELECT INTO expr
+        string_agg(def, ' AND ')
+    FROM pg_constraint JOIN LATERAL pg_get_constraintdef(oid) AS def ON TRUE
+    WHERE
+        conrelid = reloid
+        AND contype = 'c'
+        AND def LIKE '%' || colname || '%'
+    ;
+
+    IF expr IS NULL THEN
+        RETURN NULL;
     END IF;
-    WITH f AS (SELECT (regexp_matches(expr, E'([0-9]{4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]\.?[0-9]*)', 'g'))[1] f)
-    SELECT array_agg(f::timestamptz) INTO matches FROM f;
-    IF cardinality(matches) = 4 THEN
-        dt := tstzrange(matches[1], matches[2],'[]');
-        edt := tstzrange(matches[3], matches[4], '[]');
-        RETURN;
-    ELSIF cardinality(matches) = 2 THEN
-        edt := tstzrange(matches[1], matches[2],'[]');
-        RETURN;
-    END IF;
-    RETURN;
+
+    -- collect all constraints for the specified column
+    FOR m IN SELECT regexp_matches(expr, colname || $expr$\s*([<>=]{1,2})\s*'([0-9 :+\-]+)'$expr$, 'g') LOOP
+        ts := m[2]::timestamptz;
+        IF m[1] IN ('>', '>=')
+        THEN
+            IF ts_lower IS NULL OR ts > ts_lower OR (ts = ts_lower AND m[1] = '>') THEN
+                ts_lower := ts;
+                lower_inclusive := CASE WHEN m[1] = '>' THEN '(' ELSE '[' END;
+            END IF;
+        ELSIF m[1] IN ('<', '<=')
+        THEN
+            IF ts_upper IS NULL OR ts < ts_upper OR (ts = ts_upper AND m[1] = '<') THEN
+                ts_upper := ts;
+                upper_inclusive := CASE WHEN m[1] = '<' THEN ')' ELSE ']' END;
+            END IF;
+        END IF;
+    END LOOP;
+    RETURN tstzrange(ts_lower, ts_upper, lower_inclusive || upper_inclusive);
 END;
-$$ LANGUAGE PLPGSQL STABLE STRICT;
+$$ LANGUAGE plpgsql STRICT STABLE;
+
+CREATE OR REPLACE FUNCTION get_partition_name(relid regclass) RETURNS text AS $$
+    SELECT (parse_ident(relid::text))[cardinality(parse_ident(relid::text))];
+$$ LANGUAGE SQL STABLE STRICT;
 
 CREATE OR REPLACE VIEW partition_sys_meta AS
 SELECT
-    relid::text as partition,
-    replace(replace(CASE WHEN level = 1 THEN pg_get_expr(c.relpartbound, c.oid)
-        ELSE pg_get_expr(parent.relpartbound, parent.oid)
-    END, 'FOR VALUES IN (''',''), ''')','') AS collection,
+    partition,
+    replace(
+        replace(
+            CASE WHEN level = 1 THEN partition_expr ELSE parent_partition_expr END,
+            'FOR VALUES IN (''',
+            ''
+        ),
+        ''')',
+        ''
+    ) AS collection,
     level,
     c.reltuples,
     c.relhastriggers,
-    COALESCE(constraint_tstzrange(pg_get_expr(c.relpartbound, c.oid)), tstzrange('-infinity', 'infinity','[]')) as partition_dtrange,
-    COALESCE((dt_constraint(edt.oid)).dt, constraint_tstzrange(pg_get_expr(c.relpartbound, c.oid)), tstzrange('-infinity', 'infinity','[]')) as constraint_dtrange,
-    COALESCE((dt_constraint(edt.oid)).edt, tstzrange('-infinity', 'infinity','[]')) as constraint_edtrange
+    partition_dtrange,
+    COALESCE(
+        get_tstz_constraint(c.oid, 'datetime'),
+        partition_dtrange,
+        inf_range
+    ) as constraint_dtrange,
+    COALESCE(
+        get_tstz_constraint(c.oid, 'end_datetime'),
+        inf_range
+    ) as constraint_edtrange
 FROM
     pg_partition_tree('items')
     JOIN pg_class c ON (relid::regclass = c.oid)
     JOIN pg_class parent ON (parentrelid::regclass = parent.oid AND isleaf)
     LEFT JOIN pg_constraint edt ON (conrelid=c.oid AND contype='c')
+    JOIN LATERAL get_partition_name(relid) AS partition ON TRUE
+    JOIN LATERAL pg_get_expr(c.relpartbound, c.oid) as partition_expr ON TRUE
+    JOIN LATERAL pg_get_expr(parent.relpartbound, parent.oid) as parent_partition_expr ON TRUE
+    JOIN LATERAL tstzrange('-infinity', 'infinity','[]') as inf_range ON TRUE
+    JOIN LATERAL COALESCE(constraint_tstzrange(pg_get_expr(c.relpartbound, c.oid)), inf_range) as partition_dtrange ON TRUE
+    JOIN LATERAL get_tstz_constraint(c.oid, 'datetime') as datetime_constraint ON TRUE
+    JOIN LATERAL get_tstz_constraint(c.oid, 'end_datetime') as end_datetime_constraint ON TRUE
 WHERE isleaf
 ;
 
-CREATE VIEW partitions_view AS
+CREATE OR REPLACE VIEW partitions_view AS
 SELECT
-    relid::text as partition,
-    replace(replace(CASE WHEN level = 1 THEN pg_get_expr(c.relpartbound, c.oid)
-        ELSE pg_get_expr(parent.relpartbound, parent.oid)
-    END, 'FOR VALUES IN (''',''), ''')','') AS collection,
+    (parse_ident(relid::text))[cardinality(parse_ident(relid::text))] as partition,
+    replace(
+        replace(
+            CASE WHEN level = 1 THEN partition_expr ELSE parent_partition_expr END,
+            'FOR VALUES IN (''',
+            ''
+        ),
+        ''')',
+        ''
+    ) AS collection,
     level,
     c.reltuples,
     c.relhastriggers,
-    COALESCE(constraint_tstzrange(pg_get_expr(c.relpartbound, c.oid)), tstzrange('-infinity', 'infinity','[]')) as partition_dtrange,
-    COALESCE((dt_constraint(edt.oid)).dt, constraint_tstzrange(pg_get_expr(c.relpartbound, c.oid)), tstzrange('-infinity', 'infinity','[]')) as constraint_dtrange,
-    COALESCE((dt_constraint(edt.oid)).edt, tstzrange('-infinity', 'infinity','[]')) as constraint_edtrange,
+    partition_dtrange,
+    COALESCE(
+        get_tstz_constraint(c.oid, 'datetime'),
+        partition_dtrange,
+        inf_range
+    ) as constraint_dtrange,
+    COALESCE(
+        get_tstz_constraint(c.oid, 'end_datetime'),
+        inf_range
+    ) as constraint_edtrange,
     dtrange,
     edtrange,
     spatial,
@@ -2460,7 +2532,14 @@ FROM
     JOIN pg_class c ON (relid::regclass = c.oid)
     JOIN pg_class parent ON (parentrelid::regclass = parent.oid AND isleaf)
     LEFT JOIN pg_constraint edt ON (conrelid=c.oid AND contype='c')
-    LEFT JOIN partition_stats ON (relid::text=partition)
+    JOIN LATERAL get_partition_name(relid) AS partition ON TRUE
+    JOIN LATERAL pg_get_expr(c.relpartbound, c.oid) as partition_expr ON TRUE
+    JOIN LATERAL pg_get_expr(parent.relpartbound, parent.oid) as parent_partition_expr ON TRUE
+    JOIN LATERAL tstzrange('-infinity', 'infinity','[]') as inf_range ON TRUE
+    JOIN LATERAL COALESCE(constraint_tstzrange(pg_get_expr(c.relpartbound, c.oid)), inf_range) as partition_dtrange ON TRUE
+    JOIN LATERAL get_tstz_constraint(c.oid, 'datetime') as datetime_constraint ON TRUE
+    JOIN LATERAL get_tstz_constraint(c.oid, 'end_datetime') as end_datetime_constraint ON TRUE
+    LEFT JOIN pgstac.partition_stats USING (partition)
 WHERE isleaf
 ;
 
@@ -2507,6 +2586,7 @@ BEGIN
         _partition
     ) INTO dtrange, edtrange;
     extent := st_estimatedextent('pgstac', _partition, 'geometry');
+    RAISE DEBUG 'Estimated Extent: %', extent;
     INSERT INTO partition_stats (partition, dtrange, edtrange, spatial, last_updated)
         SELECT _partition, dtrange, edtrange, extent, now()
         ON CONFLICT (partition) DO
@@ -2921,6 +3001,7 @@ BEGIN
     END IF;
     EXECUTE format('EXPLAIN (format json) SELECT 1 FROM items WHERE %s;', _where)
     INTO explain;
+    RAISE DEBUG 'EXPLAIN: %', explain;
 
     RETURN QUERY
     WITH t AS (
@@ -3036,6 +3117,83 @@ CREATE OR REPLACE FUNCTION partition_query_view(
 $$ LANGUAGE SQL IMMUTABLE;
 
 
+CREATE OR REPLACE FUNCTION q_to_tsquery (jinput jsonb)
+    RETURNS tsquery
+    AS $$
+DECLARE
+    input text;
+    processed_text text;
+    temp_text text;
+    quote_array text[];
+    placeholder text := '@QUOTE@';
+BEGIN
+    IF jsonb_typeof(jinput) = 'string' THEN
+        input := jinput->>0;
+    ELSIF jsonb_typeof(jinput) = 'array' THEN
+        input := array_to_string(
+            array(select jsonb_array_elements_text(jinput)),
+            ' OR '
+        );
+    ELSE
+        RAISE EXCEPTION 'Input must be a string or an array of strings.';
+    END IF;
+    -- Extract all quoted phrases and store in array
+    quote_array := regexp_matches(input, '"[^"]*"', 'g');
+
+    -- Replace each quoted part with a unique placeholder if there are any quoted phrases
+    IF array_length(quote_array, 1) IS NOT NULL THEN
+        processed_text := input;
+        FOR i IN array_lower(quote_array, 1) .. array_upper(quote_array, 1) LOOP
+            processed_text := replace(processed_text, quote_array[i], placeholder || i || placeholder);
+        END LOOP;
+    ELSE
+        processed_text := input;
+    END IF;
+
+    -- Replace non-quoted text using regular expressions
+
+    -- , -> |
+    processed_text := regexp_replace(processed_text, ',(?=(?:[^"]*"[^"]*")*[^"]*$)', ' | ', 'g');
+
+    -- and -> &
+    processed_text := regexp_replace(processed_text, '\s+AND\s+', ' & ', 'gi');
+
+    -- or -> |
+    processed_text := regexp_replace(processed_text, '\s+OR\s+', ' | ', 'gi');
+
+    -- + ->
+    processed_text := regexp_replace(processed_text, '^\s*\+([a-zA-Z0-9_]+)', '\1', 'g'); -- +term at start
+    processed_text := regexp_replace(processed_text, '\s*\+([a-zA-Z0-9_]+)', ' & \1', 'g'); -- +term elsewhere
+
+    -- - ->  !
+    processed_text := regexp_replace(processed_text, '^\s*\-([a-zA-Z0-9_]+)', '! \1', 'g'); -- -term at start
+    processed_text := regexp_replace(processed_text, '\s*\-([a-zA-Z0-9_]+)', ' & ! \1', 'g'); -- -term elsewhere
+
+    -- terms separated with spaces are assumed to represent adjacent terms. loop through these
+    -- occurrences and replace them with the adjacency operator (<->)
+    LOOP
+        temp_text := regexp_replace(processed_text, '([a-zA-Z0-9_]+)\s+([a-zA-Z0-9_]+)(?!\s*[&|<>])', '\1 <-> \2', 'g');
+        IF temp_text = processed_text THEN
+            EXIT; -- No more replacements were made
+        END IF;
+        processed_text := temp_text;
+    END LOOP;
+
+
+    -- Replace placeholders back with quoted phrases if there were any
+    IF array_length(quote_array, 1) IS NOT NULL THEN
+        FOR i IN array_lower(quote_array, 1) .. array_upper(quote_array, 1) LOOP
+            processed_text := replace(processed_text, placeholder || i || placeholder, '''' || substring(quote_array[i] from 2 for length(quote_array[i]) - 2) || '''');
+        END LOOP;
+    END IF;
+
+    -- Print processed_text to the console for debugging purposes
+    RAISE NOTICE 'processed_text: %', processed_text;
+
+    RETURN to_tsquery('english', processed_text);
+END;
+$$
+LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION stac_search_to_where(j jsonb) RETURNS text AS $$
@@ -3049,6 +3207,7 @@ DECLARE
     edate timestamptz;
     filterlang text;
     filter jsonb := j->'filter';
+    ft_query tsquery;
 BEGIN
     IF j ? 'ids' THEN
         where_segments := where_segments || format('id = ANY (%L) ', to_text_array(j->'ids'));
@@ -3067,6 +3226,20 @@ BEGIN
         where_segments := where_segments || format(' datetime <= %L::timestamptz AND end_datetime >= %L::timestamptz ',
             edate,
             sdate
+        );
+    END IF;
+
+    IF j ? 'q' THEN
+        ft_query := q_to_tsquery(j->'q');
+        where_segments := where_segments || format(
+            $quote$
+            (
+                to_tsvector('english', content->'properties'->>'description') ||
+                to_tsvector('english', coalesce(content->'properties'->>'title', '')) ||
+                to_tsvector('english', coalesce(content->'properties'->>'keywords', ''))
+            ) @@ %L
+            $quote$,
+            ft_query
         );
     END IF;
 
@@ -3352,7 +3525,11 @@ CREATE TABLE IF NOT EXISTS search_wheres(
 CREATE INDEX IF NOT EXISTS search_wheres_partitions ON search_wheres USING GIN (partitions);
 CREATE UNIQUE INDEX IF NOT EXISTS search_wheres_where ON search_wheres ((md5(_where)));
 
-CREATE OR REPLACE FUNCTION where_stats(inwhere text, updatestats boolean default false, conf jsonb default null) RETURNS search_wheres AS $$
+CREATE OR REPLACE FUNCTION where_stats(
+    inwhere text,
+    updatestats boolean default false,
+    conf jsonb default null
+) RETURNS search_wheres AS $$
 DECLARE
     t timestamptz;
     i interval;
@@ -3362,110 +3539,158 @@ DECLARE
     inwhere_hash text := md5(inwhere);
     _context text := lower(context(conf));
     _stats_ttl interval := context_stats_ttl(conf);
-    _estimated_cost float := context_estimated_cost(conf);
-    _estimated_count int := context_estimated_count(conf);
+    _estimated_cost_threshold float := context_estimated_cost(conf);
+    _estimated_count_threshold int := context_estimated_count(conf);
     ro bool := pgstac.readonly(conf);
 BEGIN
-    IF ro THEN
-        updatestats := FALSE;
+    -- If updatestats is true then set ttl to 0
+    IF updatestats THEN
+        RAISE DEBUG 'Updatestats set to TRUE, setting TTL to 0';
+        _stats_ttl := '0'::interval;
     END IF;
 
+    -- If we don't need to calculate context, just return
     IF _context = 'off' THEN
-        sw._where := inwhere;
-        return sw;
-    END IF;
-
-    SELECT * INTO sw FROM search_wheres WHERE md5(_where)=inwhere_hash FOR UPDATE;
-
-    -- Update statistics if explicitly set, if statistics do not exist, or statistics ttl has expired
-    IF NOT updatestats THEN
-        RAISE NOTICE 'Checking if update is needed for: % .', inwhere;
-        RAISE NOTICE 'Stats Last Updated: %', sw.statslastupdated;
-        RAISE NOTICE 'TTL: %, Age: %', _stats_ttl, now() - sw.statslastupdated;
-        RAISE NOTICE 'Context: %, Existing Total: %', _context, sw.total_count;
-        IF
-            (
-                sw.statslastupdated IS NULL
-                OR (now() - sw.statslastupdated) > _stats_ttl
-                OR (context(conf) != 'off' AND sw.total_count IS NULL)
-            ) AND NOT ro
-        THEN
-            updatestats := TRUE;
-        END IF;
-    END IF;
-
-    sw._where := inwhere;
-    sw.lastused := now();
-    sw.usecount := coalesce(sw.usecount,0) + 1;
-
-    IF NOT updatestats THEN
-        UPDATE search_wheres SET
-            lastused = sw.lastused,
-            usecount = sw.usecount
-        WHERE md5(_where) = inwhere_hash
-        RETURNING * INTO sw
-        ;
+        sw._where = inwhere;
         RETURN sw;
     END IF;
 
-    -- Use explain to get estimated count/cost and a list of the partitions that would be hit by the query
-    t := clock_timestamp();
-    EXECUTE format('EXPLAIN (format json) SELECT 1 FROM items WHERE %s', inwhere)
-    INTO explain_json;
-    RAISE NOTICE 'Time for just the explain: %', clock_timestamp() - t;
-    i := clock_timestamp() - t;
-
-    sw.statslastupdated := now();
-    sw.estimated_count := explain_json->0->'Plan'->'Plan Rows';
-    sw.estimated_cost := explain_json->0->'Plan'->'Total Cost';
-    sw.time_to_estimate := extract(epoch from i);
-
-    RAISE NOTICE 'ESTIMATED_COUNT: % < %', sw.estimated_count, _estimated_count;
-    RAISE NOTICE 'ESTIMATED_COST: % < %', sw.estimated_cost, _estimated_cost;
-
-    -- Do a full count of rows if context is set to on or if auto is set and estimates are low enough
-    IF
-        _context = 'on'
-        OR
-        ( _context = 'auto' AND
-            (
-                sw.estimated_count < _estimated_count
-                AND
-                sw.estimated_cost < _estimated_cost
-            )
-        )
-    THEN
-        t := clock_timestamp();
-        RAISE NOTICE 'Calculating actual count...';
-        EXECUTE format(
-            'SELECT count(*) FROM items WHERE %s',
-            inwhere
-        ) INTO sw.total_count;
-        i := clock_timestamp() - t;
-        RAISE NOTICE 'Actual Count: % -- %', sw.total_count, i;
-        sw.time_to_count := extract(epoch FROM i);
+    -- Get any stats that we have.
+    IF NOT ro THEN
+        -- If there is a lock where another process is
+        -- updating the stats, wait so that we don't end up calculating a bunch of times.
+        SELECT * INTO sw FROM search_wheres WHERE md5(_where)=inwhere_hash FOR UPDATE;
     ELSE
-        sw.total_count := NULL;
-        sw.time_to_count := NULL;
+        SELECT * INTO sw FROM search_wheres WHERE md5(_where)=inwhere_hash;
     END IF;
+
+    -- If there is a cached row, figure out if we need to update
+    IF
+        sw IS NOT NULL
+        AND sw.statslastupdated IS NOT NULL
+        AND sw.total_count IS NOT NULL
+        AND now() - sw.statslastupdated <= _stats_ttl
+    THEN
+        -- we have a cached row with data that is within our ttl
+        RAISE DEBUG 'Stats present in table and lastupdated within ttl: %', sw;
+        IF NOT ro THEN
+            RAISE DEBUG 'Updating search_wheres only bumping lastused and usecount';
+            UPDATE search_wheres SET
+                lastused = now(),
+                usecount = search_wheres.usecount + 1
+            WHERE md5(_where) = inwhere_hash
+            RETURNING * INTO sw;
+        END IF;
+        RAISE DEBUG 'Returning cached counts. %', sw;
+        RETURN sw;
+    END IF;
+
+    -- Calculate estimated cost and rows
+    -- Use explain to get estimated count/cost
+    IF sw.estimated_count IS NULL OR sw.estimated_cost IS NULL THEN
+        RAISE DEBUG 'Calculating estimated stats';
+        t := clock_timestamp();
+        EXECUTE format('EXPLAIN (format json) SELECT 1 FROM items WHERE %s', inwhere)
+            INTO explain_json;
+        RAISE DEBUG 'Time for just the explain: %', clock_timestamp() - t;
+        i := clock_timestamp() - t;
+
+        sw.estimated_count := explain_json->0->'Plan'->'Plan Rows';
+        sw.estimated_cost := explain_json->0->'Plan'->'Total Cost';
+        sw.time_to_estimate := extract(epoch from i);
+    END IF;
+
+    RAISE DEBUG 'ESTIMATED_COUNT: %, THRESHOLD %', sw.estimated_count, _estimated_count_threshold;
+    RAISE DEBUG 'ESTIMATED_COST: %, THRESHOLD %', sw.estimated_cost, _estimated_cost_threshold;
+
+    -- If context is set to auto and the costs are within the threshold return the estimated costs
+    IF
+        _context = 'auto'
+        AND sw.estimated_count >= _estimated_count_threshold
+        AND sw.estimated_cost >= _estimated_cost_threshold
+    THEN
+        IF NOT ro THEN
+            INSERT INTO search_wheres (
+                _where,
+                lastused,
+                usecount,
+                statslastupdated,
+                estimated_count,
+                estimated_cost,
+                time_to_estimate,
+                total_count,
+                time_to_count
+            ) VALUES (
+                inwhere,
+                now(),
+                1,
+                now(),
+                sw.estimated_count,
+                sw.estimated_cost,
+                sw.time_to_estimate,
+                null,
+                null
+            ) ON CONFLICT ((md5(_where)))
+            DO UPDATE SET
+                lastused = EXCLUDED.lastused,
+                usecount = search_wheres.usecount + 1,
+                statslastupdated = EXCLUDED.statslastupdated,
+                estimated_count = EXCLUDED.estimated_count,
+                estimated_cost = EXCLUDED.estimated_cost,
+                time_to_estimate = EXCLUDED.time_to_estimate,
+                total_count = EXCLUDED.total_count,
+                time_to_count = EXCLUDED.time_to_count
+            RETURNING * INTO sw;
+        END IF;
+        RAISE DEBUG 'Estimates are within thresholds, returning estimates. %', sw;
+        RETURN sw;
+    END IF;
+
+    -- Calculate Actual Count
+    t := clock_timestamp();
+    RAISE NOTICE 'Calculating actual count...';
+    EXECUTE format(
+        'SELECT count(*) FROM items WHERE %s',
+        inwhere
+    ) INTO sw.total_count;
+    i := clock_timestamp() - t;
+    RAISE NOTICE 'Actual Count: % -- %', sw.total_count, i;
+    sw.time_to_count := extract(epoch FROM i);
 
     IF NOT ro THEN
-        INSERT INTO search_wheres
-            (_where, lastused, usecount, statslastupdated, estimated_count, estimated_cost, time_to_estimate, partitions, total_count, time_to_count)
-        SELECT sw._where, sw.lastused, sw.usecount, sw.statslastupdated, sw.estimated_count, sw.estimated_cost, sw.time_to_estimate, sw.partitions, sw.total_count, sw.time_to_count
-        ON CONFLICT ((md5(_where)))
-        DO UPDATE
-            SET
-                lastused = sw.lastused,
-                usecount = sw.usecount,
-                statslastupdated = sw.statslastupdated,
-                estimated_count = sw.estimated_count,
-                estimated_cost = sw.estimated_cost,
-                time_to_estimate = sw.time_to_estimate,
-                total_count = sw.total_count,
-                time_to_count = sw.time_to_count
-        ;
+        INSERT INTO search_wheres (
+            _where,
+            lastused,
+            usecount,
+            statslastupdated,
+            estimated_count,
+            estimated_cost,
+            time_to_estimate,
+            total_count,
+            time_to_count
+        ) VALUES (
+            inwhere,
+            now(),
+            1,
+            now(),
+            sw.estimated_count,
+            sw.estimated_cost,
+            sw.time_to_estimate,
+            sw.total_count,
+            sw.time_to_count
+        ) ON CONFLICT ((md5(_where)))
+        DO UPDATE SET
+            lastused = EXCLUDED.lastused,
+            usecount = search_wheres.usecount + 1,
+            statslastupdated = EXCLUDED.statslastupdated,
+            estimated_count = EXCLUDED.estimated_count,
+            estimated_cost = EXCLUDED.estimated_cost,
+            time_to_estimate = EXCLUDED.time_to_estimate,
+            total_count = EXCLUDED.total_count,
+            time_to_count = EXCLUDED.time_to_count
+        RETURNING * INTO sw;
     END IF;
+    RAISE DEBUG 'Returning with actual count. %', sw;
     RETURN sw;
 END;
 $$ LANGUAGE PLPGSQL SECURITY DEFINER;
@@ -3478,67 +3703,65 @@ CREATE OR REPLACE FUNCTION search_query(
 ) RETURNS searches AS $$
 DECLARE
     search searches%ROWTYPE;
+    cached_search searches%ROWTYPE;
     pexplain jsonb;
     t timestamptz;
     i interval;
-    _hash text := search_hash(_search, _metadata);
     doupdate boolean := FALSE;
     insertfound boolean := FALSE;
     ro boolean := pgstac.readonly();
+    found_search text;
 BEGIN
+    RAISE NOTICE 'SEARCH: %', _search;
+    -- Calculate hash, where clause, and order by statement
+    search.search := _search;
+    search.metadata := _metadata;
+    search.hash := search_hash(_search, _metadata);
+    search._where := stac_search_to_where(_search);
+    search.orderby := sort_sqlorderby(_search);
+    search.lastused := now();
+    search.usecount := 1;
+
+    -- If we are in read only mode, directly return search
     IF ro THEN
-        updatestats := FALSE;
+        RETURN search;
     END IF;
 
-    SELECT * INTO search FROM searches
-    WHERE hash=_hash;
+    RAISE NOTICE 'Updating Statistics for search: %s', search;
+    -- Update statistics for times used and and when last used
+    -- If the entry is locked, rather than waiting, skip updating the stats
+    INSERT INTO searches (search, lastused, usecount, metadata)
+        VALUES (search.search, now(), 1, search.metadata)
+        ON CONFLICT DO NOTHING
+        RETURNING * INTO cached_search
+    ;
 
-    search.hash := _hash;
-
-    -- Calculate the where clause if not already calculated
-    IF search._where IS NULL THEN
-        search._where := stac_search_to_where(_search);
-    ELSE
-        doupdate := TRUE;
+    IF NOT FOUND OR cached_search IS NULL THEN
+        UPDATE searches SET
+            lastused = now(),
+            usecount = searches.usecount + 1
+        WHERE hash = (
+            SELECT hash FROM searches WHERE hash=search.hash FOR UPDATE SKIP LOCKED
+        )
+        RETURNING * INTO cached_search
+        ;
     END IF;
 
-    -- Calculate the order by clause if not already calculated
-    IF search.orderby IS NULL THEN
-        search.orderby := sort_sqlorderby(_search);
-    ELSE
-        doupdate := TRUE;
+    IF cached_search IS NOT NULL THEN
+        cached_search._where = search._where;
+        cached_search.orderby = search.orderby;
+        RETURN cached_search;
     END IF;
-
-    PERFORM where_stats(search._where, updatestats, _search->'conf');
-
-    IF NOT ro THEN
-        IF NOT doupdate THEN
-            INSERT INTO searches (search, _where, orderby, lastused, usecount, metadata)
-            VALUES (_search, search._where, search.orderby, clock_timestamp(), 1, _metadata)
-            ON CONFLICT (hash) DO NOTHING RETURNING * INTO search;
-            IF FOUND THEN
-                RETURN search;
-            END IF;
-        END IF;
-
-        UPDATE searches
-            SET
-                lastused=clock_timestamp(),
-                usecount=usecount+1
-        WHERE hash=(
-            SELECT hash FROM searches
-            WHERE hash=_hash
-            FOR UPDATE SKIP LOCKED
-        );
-        IF NOT FOUND THEN
-            RAISE NOTICE 'Did not update stats for % due to lock. (This is generally OK)', _search;
-        END IF;
-    END IF;
-
     RETURN search;
 
 END;
 $$ LANGUAGE PLPGSQL SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION search_fromhash(
+    _hash text
+) RETURNS searches AS $$
+    SELECT * FROM search_query((SELECT search FROM searches WHERE hash=_hash LIMIT 1));
+$$ LANGUAGE SQL STRICT;
 
 CREATE OR REPLACE FUNCTION search_rows(
     IN _where text DEFAULT 'TRUE',
@@ -3581,7 +3804,7 @@ IF _orderby ILIKE 'datetime d%' THEN
             _orderby,
             records_left
         );
-        RAISE LOG 'QUERY: %', query;
+        RAISE DEBUG 'QUERY: %', query;
         timer := clock_timestamp();
         RETURN QUERY EXECUTE query;
 
@@ -3605,7 +3828,7 @@ ELSIF _orderby ILIKE 'datetime a%' THEN
             _orderby,
             records_left
         );
-        RAISE LOG 'QUERY: %', query;
+        RAISE DEBUG 'QUERY: %', query;
         timer := clock_timestamp();
         RETURN QUERY EXECUTE query;
 
@@ -3626,7 +3849,7 @@ ELSE
         LIMIT %L
     $q$, _where, _orderby, _limit
     );
-    RAISE LOG 'QUERY: %', query;
+    RAISE DEBUG 'QUERY: %', query;
     timer := clock_timestamp();
     RETURN QUERY EXECUTE query;
     RAISE NOTICE 'FULL QUERY TOOK %ms', age_ms(timer);
@@ -3707,6 +3930,8 @@ DECLARE
     _fields jsonb := coalesce(_search->'fields', '{}'::jsonb);
     has_prev boolean := FALSE;
     has_next boolean := FALSE;
+    links jsonb := '[]'::jsonb;
+    base_url text:= concat(rtrim(base_url(_search->'conf'),'/'));
 BEGIN
     searches := search_query(_search);
     _where := searches._where;
@@ -3721,18 +3946,18 @@ BEGIN
         token_prev := token.prev;
         token_item := token.item;
         token_where := get_token_filter(_search->'sortby', token_item, token_prev, FALSE);
-        RAISE LOG 'TOKEN_WHERE: % (%ms from search start)', token_where, age_ms(timer);
+        RAISE DEBUG 'TOKEN_WHERE: % (%ms from search start)', token_where, age_ms(timer);
         IF token_prev THEN -- if we are using a prev token, we know has_next is true
-            RAISE LOG 'There is a previous token, so automatically setting has_next to true';
+            RAISE DEBUG 'There is a previous token, so automatically setting has_next to true';
             has_next := TRUE;
             orderby := sort_sqlorderby(_search, TRUE);
         ELSE
-            RAISE LOG 'There is a next token, so automatically setting has_prev to true';
+            RAISE DEBUG 'There is a next token, so automatically setting has_prev to true';
             has_prev := TRUE;
 
         END IF;
     ELSE -- if there was no token, we know there is no prev
-        RAISE LOG 'There is no token, so we know there is no prev. setting has_prev to false';
+        RAISE DEBUG 'There is no token, so we know there is no prev. setting has_prev to false';
         has_prev := FALSE;
     END IF;
 
@@ -3766,9 +3991,9 @@ BEGIN
     END IF;
 
     RAISE NOTICE 'Query returned % records.', jsonb_array_length(out_records);
-    RAISE LOG 'TOKEN:   % %', token_item.id, token_item.collection;
-    RAISE LOG 'RECORD_1: % %', out_records->0->>'id', out_records->0->>'collection';
-    RAISE LOG 'RECORD-1: % %', out_records->-1->>'id', out_records->-1->>'collection';
+    RAISE DEBUG 'TOKEN:   % %', token_item.id, token_item.collection;
+    RAISE DEBUG 'RECORD_1: % %', out_records->0->>'id', out_records->0->>'collection';
+    RAISE DEBUG 'RECORD-1: % %', out_records->-1->>'id', out_records->-1->>'collection';
 
     -- REMOVE records that were from our token
     IF out_records->0->>'id' = token_item.id AND out_records->0->>'collection' = token_item.collection THEN
@@ -3789,39 +4014,61 @@ BEGIN
         END IF;
     END IF;
 
+
+    links := links || jsonb_build_object(
+        'rel', 'root',
+        'type', 'application/json',
+        'href', base_url
+    ) || jsonb_build_object(
+        'rel', 'self',
+        'type', 'application/json',
+        'href', concat(base_url, '/search')
+    );
+
     IF has_next THEN
         next := concat(out_records->-1->>'collection', ':', out_records->-1->>'id');
         RAISE NOTICE 'HAS NEXT | %', next;
+        links := links || jsonb_build_object(
+            'rel', 'next',
+            'type', 'application/geo+json',
+            'method', 'GET',
+            'href', concat(base_url, '/search?token=next:', next)
+        );
     END IF;
 
     IF has_prev THEN
         prev := concat(out_records->0->>'collection', ':', out_records->0->>'id');
         RAISE NOTICE 'HAS PREV | %', prev;
+        links := links || jsonb_build_object(
+            'rel', 'prev',
+            'type', 'application/geo+json',
+            'method', 'GET',
+            'href', concat(base_url, '/search?token=prev:', prev)
+        );
     END IF;
 
     RAISE NOTICE 'Time to get prev/next %', age_ms(timer);
     timer := clock_timestamp();
 
-    IF context(_search->'conf') != 'off' THEN
-        context := jsonb_strip_nulls(jsonb_build_object(
-            'limit', _limit,
-            'matched', total_count,
-            'returned', coalesce(jsonb_array_length(out_records), 0)
-        ));
-    ELSE
-        context := jsonb_strip_nulls(jsonb_build_object(
-            'limit', _limit,
-            'returned', coalesce(jsonb_array_length(out_records), 0)
-        ));
-    END IF;
 
     collection := jsonb_build_object(
         'type', 'FeatureCollection',
         'features', coalesce(out_records, '[]'::jsonb),
-        'next', next,
-        'prev', prev,
-        'context', context
+        'links', links
     );
+
+
+
+    IF context(_search->'conf') != 'off' THEN
+        collection := collection || jsonb_strip_nulls(jsonb_build_object(
+            'numberMatched', total_count,
+            'numberReturned', coalesce(jsonb_array_length(out_records), 0)
+        ));
+    ELSE
+        collection := collection || jsonb_strip_nulls(jsonb_build_object(
+            'numberReturned', coalesce(jsonb_array_length(out_records), 0)
+        ));
+    END IF;
 
     IF get_setting_bool('timing', _search->'conf') THEN
         collection = collection || jsonb_build_object('timing', age_ms(init_ts));
@@ -3831,7 +4078,7 @@ BEGIN
     timer := clock_timestamp();
 
     RAISE NOTICE 'Total Time: %', age_ms(current_timestamp);
-    RAISE NOTICE 'RETURNING % records. NEXT: %. PREV: %', collection->'context'->>'returned', collection->>'next', collection->>'prev';
+    RAISE NOTICE 'RETURNING % records. NEXT: %. PREV: %', collection->>'numberReturned', collection->>'next', collection->>'prev';
     RETURN collection;
 END;
 $$ LANGUAGE PLPGSQL;
@@ -3974,51 +4221,42 @@ BEGIN
     FROM collection_search_rows(_search) c;
 
     number_returned := jsonb_array_length(out_records);
+    RAISE DEBUG 'nm: %, nr: %, l:%, o:%', number_matched, number_returned, _limit, _offset;
 
-    IF _limit <= number_matched THEN --need to have paging links
+
+
+    IF _limit <= number_matched AND number_matched > 0 THEN --need to have paging links
         nextoffset := least(_offset + _limit, number_matched - 1);
         prevoffset := greatest(_offset - _limit, 0);
-        IF _offset = 0 THEN -- no previous paging
 
-            links := jsonb_build_array(
-                jsonb_build_object(
-                    'rel', 'next',
-                    'type', 'application/json',
-                    'method', 'GET' ,
-                    'href', base_url,
-                    'body', jsonb_build_object('offset', nextoffset),
-                    'merge', TRUE
-                )
-            );
-        ELSE
-            links := jsonb_build_array(
-                jsonb_build_object(
+        IF _offset > 0 THEN
+            links := links || jsonb_build_object(
                     'rel', 'prev',
                     'type', 'application/json',
                     'method', 'GET' ,
                     'href', base_url,
                     'body', jsonb_build_object('offset', prevoffset),
                     'merge', TRUE
-                ),
-                jsonb_build_object(
+                );
+        END IF;
+
+        IF (_offset + _limit < number_matched)  THEN
+            links := links || jsonb_build_object(
                     'rel', 'next',
                     'type', 'application/json',
                     'method', 'GET' ,
                     'href', base_url,
                     'body', jsonb_build_object('offset', nextoffset),
                     'merge', TRUE
-                )
-            );
+                );
         END IF;
+
     END IF;
 
     ret := jsonb_build_object(
         'collections', out_records,
-        'context', jsonb_build_object(
-            'limit', _limit,
-            'matched', number_matched,
-            'returned', number_returned
-        ),
+        'numberMatched', number_matched,
+        'numberReturned', number_returned,
         'links', links
     );
     RETURN ret;
@@ -4095,9 +4333,9 @@ BEGIN
         exitwhenfull := TRUE;
     END IF;
 
-    SELECT * INTO search FROM searches WHERE hash=queryhash;
+    search := search_fromhash(queryhash);
 
-    IF NOT FOUND THEN
+    IF search IS NULL THEN
         RAISE EXCEPTION 'Search with Query Hash % Not Found', queryhash;
     END IF;
 
@@ -4283,14 +4521,12 @@ BEGIN
 
     IF geom_extent IS NOT NULL AND mind IS NOT NULL AND maxd IS NOT NULL THEN
         extent := jsonb_build_object(
-            'extent', jsonb_build_object(
                 'spatial', jsonb_build_object(
                     'bbox', to_jsonb(array[array[st_xmin(geom_extent), st_ymin(geom_extent), st_xmax(geom_extent), st_ymax(geom_extent)]])
                 ),
                 'temporal', jsonb_build_object(
                     'interval', to_jsonb(array[array[mind, maxd]])
                 )
-            )
         );
         RETURN extent;
     END IF;
@@ -4343,6 +4579,43 @@ INSERT INTO pgstac_settings (name, value) VALUES
 ON CONFLICT DO NOTHING
 ;
 
+
+INSERT INTO cql2_ops (op, template, types) VALUES
+    ('eq', '%s = %s', NULL),
+    ('neq', '%s != %s', NULL),
+    ('ne', '%s != %s', NULL),
+    ('!=', '%s != %s', NULL),
+    ('<>', '%s != %s', NULL),
+    ('lt', '%s < %s', NULL),
+    ('lte', '%s <= %s', NULL),
+    ('gt', '%s > %s', NULL),
+    ('gte', '%s >= %s', NULL),
+    ('le', '%s <= %s', NULL),
+    ('ge', '%s >= %s', NULL),
+    ('=', '%s = %s', NULL),
+    ('<', '%s < %s', NULL),
+    ('<=', '%s <= %s', NULL),
+    ('>', '%s > %s', NULL),
+    ('>=', '%s >= %s', NULL),
+    ('like', '%s LIKE %s', NULL),
+    ('ilike', '%s ILIKE %s', NULL),
+    ('+', '%s + %s', NULL),
+    ('-', '%s - %s', NULL),
+    ('*', '%s * %s', NULL),
+    ('/', '%s / %s', NULL),
+    ('not', 'NOT (%s)', NULL),
+    ('between', '%s BETWEEN %s AND %s', NULL),
+    ('isnull', '%s IS NULL', NULL),
+    ('upper', 'upper(%s)', NULL),
+    ('lower', 'lower(%s)', NULL),
+    ('casei', 'upper(%s)', NULL),
+    ('accenti', 'unaccent(%s)', NULL)
+ON CONFLICT (op) DO UPDATE
+    SET
+        template = EXCLUDED.template
+;
+
+
 ALTER FUNCTION to_text COST 5000;
 ALTER FUNCTION to_float COST 5000;
 ALTER FUNCTION to_int COST 5000;
@@ -4386,4 +4659,4 @@ RESET ROLE;
 
 SET ROLE pgstac_ingest;
 SELECT update_partition_stats_q(partition) FROM partitions_view;
-SELECT set_version('0.8.4');
+SELECT set_version('unreleased');
