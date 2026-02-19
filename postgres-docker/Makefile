@@ -36,6 +36,10 @@ down: compose.yaml | stop
 down-with-pgadmin: compose-with-pgadmin.yaml | stop-with-pgadmin
 > sleep 1 && docker compose -f $< down
 
+## use -B/--always-make option. Unconditionally make all targets!
+30-pgstac.sql:
+> curl -fsSLO https://raw.githubusercontent.com/stac-utils/pgstac/refs/heads/main/src/pgstac/pgstac.sql && mv pgstac.sql $@
+
 clean:
 > docker container prune --force
 
