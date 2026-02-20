@@ -9,6 +9,7 @@ Dockerfiles
 [![spatialite](https://github.com/vlulla/Dockerfiles/actions/workflows/build-spatialite.yml/badge.svg)](https://github.com/vlulla/Dockerfiles/actions/workflows/build-spatialite.yml)
 [![pandoc-with-komascript](https://github.com/vlulla/Dockerfiles/actions/workflows/build-pandoc-komascript-image.yml/badge.svg)](https://github.com/vlulla/Dockerfiles/actions/workflows/build-pandoc-komascript-image.yml)
 [![fsharp-with-R](https://github.com/vlulla/Dockerfiles/actions/workflows/build-fsharp-with-r-image.yml/badge.svg)](https://github.com/vlulla/Dockerfiles/actions/workflows/build-fsharp-with-r-image.yml)
+[![julia](https://github.com/vlulla/Dockerfiles/actions/workflows/build-julia-docker-image.yml/badge.svg)](https://github.com/vlulla/Dockerfiles/actions/workflows/build-julia-docker-image.yml)
 
 My collection of Dockerfiles!
 
