@@ -29,14 +29,14 @@ RUN mkdir -p ${HOME}/code/spark
 WORKDIR ${HOME}/code/spark
 RUN <<EOT
 set -ex
-curl -SL -O https://dlcdn.apache.org/spark/spark-4.0.0/spark-4.0.0-bin-hadoop3.tgz && tar xf spark-4.0.0-bin-hadoop3.tgz && rm -rf spark-4.0.0-bin-hadoop3.tgz
-curl -SL -O https://dlcdn.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz && tar xf hadoop-3.4.1.tar.gz && rm -rf hadoop-3.4.1.tar.gz
+curl -SL -O https://dlcdn.apache.org/spark/spark-4.1.1/spark-4.1.1-bin-hadoop3.tgz && tar xf spark-4.1.1-bin-hadoop3.tgz && rm -rf spark-4.1.1-bin-hadoop3.tgz
+curl -SL -O https://dlcdn.apache.org/hadoop/common/hadoop-3.4.2/hadoop-3.4.2.tar.gz && tar xf hadoop-3.4.2.tar.gz && rm -rf hadoop-3.4.2.tar.gz
 EOT
 
-## bash $ java -XshowSettings:properties --version 2>&1 | awk '/java.home/' | awk '{print $3}' # for JAVA_HOME
+## bash $ java -XshowSettings:properties --version 2>&1 | awk '/java.home/{print $3}' # for JAVA_HOME
 ENV JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
-ENV HADOOP_HOME="${HOME}/code/spark/hadoop-3.4.1"
-ENV SPARK_HOME="${HOME}/code/spark/spark-4.0.0-bin-hadoop3"
+ENV HADOOP_HOME="${HOME}/code/spark/hadoop-3.4.2"
+ENV SPARK_HOME="${HOME}/code/spark/spark-4.1.1-bin-hadoop3"
 ENV PATH="${PATH:+${PATH}:}${HADOOP_HOME}/bin:${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${HADOOP_HOME}/lib/native"
 
