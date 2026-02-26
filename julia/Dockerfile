@@ -8,6 +8,6 @@ FROM julia:latest
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN julia -e 'using Pkg;map(Pkg.add,["Distributions","DataFrames","StatsModels","RDatasets","GLM","MixedModels","StatsBase","Plots","StatsPlots","JuMP","HiGHS","SCIP","CSV","DuckDB"])'
+RUN julia -e 'using Pkg;map(Pkg.add,["CSV","DataFrames","Distributions","DuckDB","GLM","GLMNet","HiGHS","JuMP","KernelDensity","Loess","MixedModels","MultivariateStats","NLOpt","Plots","RDatasets","SCIP","StatsBase","StatsModels","StatsPlots","Survival","TimeSeries",])'
 
 CMD [ "julia" ]
