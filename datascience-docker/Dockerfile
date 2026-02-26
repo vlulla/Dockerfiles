@@ -116,15 +116,6 @@ EOT
 ENV CMDSTAN=/home/${USR}/micromamba/envs/ds/bin/cmdstan
 
 RUN <<EOT
-set -ex
-curl -fsSL https://install.julialang.org | sh -s -- -y
-## sed -i -E -e '/^path.+juliaup/s-^-postpath "${HOME}/.juliaup/bin" ## -g' /home/${USR}/.zshrc
-/home/${USR}/.juliaup/bin/julia -p auto -e 'using Pkg;[Pkg.add(p) for p in ["DataFrames","Distances","Distributions","DuckDB","GLM","GLMNet","JuMP","KernelDensity","Loess","MixedModels","MultivariateStats","NLopt","RDatasets","Rmath","StatsBase","StatsModels","Survival","TimeSeries","HiGHS"]]'
-sed -i -e '/^path=/ s/=/+=/g;s/ \$path//g' ${HOME}/.zshrc
-mkdir -p /home/${USR}/.julia/config && ln -s /home/${USR}/code/config/startup.jl /home/${USR}/.julia/config/startup.jl
-EOT
-
-RUN <<EOT
 ## R from container does not have browser/viewer for R's `?` or `help` command requires setting help_type option to "text"
 ( cat <<EOF
 with(list(profile_fname="~/code/config/Rprofile"),if(file.exists(profile_fname)) source(profile_fname))
