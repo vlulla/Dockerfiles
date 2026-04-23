@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG VERSION="${VERSION:-noble}"
+ARG VERSION="${VERSION:-resolute}"
 FROM ubuntu:${VERSION}
 
 SHELL [ "/bin/bash", "-eo","pipefail", "-c"]

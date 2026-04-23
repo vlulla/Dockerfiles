@@ -1,4 +1,4 @@
-ARG VERSION=noble
+ARG VERSION=resolute
 FROM ubuntu:${VERSION}
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
