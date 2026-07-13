@@ -8,7 +8,7 @@ SHELL := bash
 .DEFAULT: all
 
 ifeq ($(shell uname -s), Linux)
-	BUILD_ARGS=--build-arg UID=$$(id -u) --build-arg USR=$$(id -un) --build-arg GID=$$(id -g) --build-arg GRP=$$(id -gn)
+	BUILD_ARGS=--build-arg USR=$$(id -un) --build-arg GRP=$$(id -gn)
 else
 	BUILD_ARGS=
 endif

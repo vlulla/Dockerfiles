@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:jammy
+FROM ubuntu:resolute
 
 LABEL maintainer "Vijay Lulla <vijaylulla@gmail.com>"
 
@@ -16,7 +16,7 @@ RUN <<EOT
 set -ex
 apt-get update -qq -y
 apt-get install -y --no-install-recommends build-essential apt-utils tzdata
-apt-get install -y libgeos-dev libxml2 libxml2-dev pkg-config curl wget jq gawk sed git gcc gdal-bin libgdal-dev postgis
+apt-get install -y libgeos-dev libxml2-dev pkg-config curl wget jq gawk sed git gcc gdal-bin libgdal-dev postgis
 EOT
 
 RUN apt-get install -y iproute2 net-tools iputils-ping
@@ -84,8 +84,8 @@ EOT
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
-ARG UID=${UID:-1000}
-ARG GID=${GID:-1000}
+ARG UID=${UID:-1010}
+ARG GID=${GID:-1010}
 
 ## Add a user
 ARG USR=${USR:-usr}
